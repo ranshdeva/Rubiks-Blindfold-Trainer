@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cube Letter Trainer</title>
+<style>
+  :root { box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  html, body { margin: 0; height: 100%; background: #1e1e2e; overflow: hidden; font-family: sans-serif; color: #eee; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  canvas.grabbing { cursor: grabbing; }
+  #panel { position: absolute; top: 12px; left: 12px; width: min(calc(100vw - 24px), 300px);
+           background: transparent; border-radius: 12px; padding: 12px; z-index: 2; text-align: center; }
+  #panel button { background: #333a5c; color: #eee; border: 0; border-radius: 8px; padding: 7px 10px; margin: 2px; font-size: 13px; cursor: pointer; }
+  #panel button.active { background: #4f7cff; }
+  #panel button:disabled { opacity: 0.4; cursor: default; }
+  .row { margin: 4px 0; }
+  #quiz { position: absolute; top: 12px; right: 12px; width: min(calc(100vw - 24px), 260px);
+          background: transparent; padding: 12px; z-index: 2; text-align: center; }
+  #prompt { font-size: 17px; margin: 10px 0 6px; min-height: 24px; }
+  #answer { width: 56px; font-size: 20px; text-align: center; padding: 5px; border-radius: 6px; border: 0; background: #222; color: #fff; caret-color: #fff; outline: 2px solid transparent; }
+  #answer:focus { outline: 2px solid #fff; }
+  #feedback { min-height: 20px; margin-top: 6px; font-size: 14px; }
+  #score { color: #aaa; font-size: 13px; margin-top: 4px; min-height: 16px; }
+  #hint { position: absolute; bottom: 12px; width: 100%; text-align: center; color: #aaa; font-size: 14px; pointer-events: none; z-index: 1; }
+  .ok { color: #6f6; } .bad { color: #f66; }
+</style>
+</head>
+<body>
+<div id="panel">
+  <div class="row">
+    <button id="modeEdge" class="active">Edges</button>
+    <button id="modeCorner">Corners</button>
+    <button id="modeWeak">Weak spots</button>
+    <button id="modeKey">Answer key</button>
+    <button id="modeRevEdge">Find edge</button>
+    <button id="modeRevCorner">Find corner</button>
+  </div>
+  <div class="row">
+    <button id="timeNone" class="active">Practice</button>
+    <button id="time15">15 s</button>
+    <button id="time30">30 s</button>
+    <button id="time60">1 min</button>
+  </div>
+  </div>
+<div id="quiz">
+  <div id="prompt"></div>
+  <input id="answer" maxlength="1" autocomplete="off" autocapitalize="off" spellcheck="false">
+  <div id="feedback"></div>
+  <div id="score"></div>
+  <div class="row"><button id="action">Skip</button></div>
+</div>
+<div id="hint">Right-drag to turn the cube · Esc to reset</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  // ---------- Scene ----------
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 100);
+  camera.position.set(0, 0, 9);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(devicePixelRatio);
+  renderer.setSize(innerWidth, innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+  const light = new THREE.DirectionalLight(0xffffff, 0.5);
+  light.position.set(3, 5, 4);
+  scene.add(light);
+
+  const COLORS = { right: 0xb71234, left: 0xff5800, up: 0xffffff, down: 0xffd500, front: 0x009b48, back: 0x0046ad };
+  const HIGHLIGHT = 0xff00ff;
+
+  // ---------- Cube ----------
+  const cube = new THREE.Group();
+  scene.add(cube);
+  cube.rotation.set(0.25, 0, 0);
+
+  // BoxGeometry material order: +x, -x, +y, -y, +z, -z
+  const DIRS = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+  const COLOR_BY_IDX = [COLORS.right, COLORS.left, COLORS.up, COLORS.down, COLORS.front, COLORS.back];
+
+  const allPieces = [];
+  const stickerMeshes = [];   // every visible tile, for click detection
+  const boxGeo = new THREE.BoxGeometry(0.95, 0.95, 0.95);
+  const stickerGeo = new THREE.PlaneGeometry(0.8, 0.8);
+  const hiddenMat = () => new THREE.MeshBasicMaterial({ visible: false });
+
+  for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) {
+    if (x === 0 && y === 0 && z === 0) continue;   // hidden center
+    // The piece body is invisible; only the stickers are drawn
+    const piece = new THREE.Mesh(boxGeo, [hiddenMat(), hiddenMat(), hiddenMat(), hiddenMat(), hiddenMat(), hiddenMat()]);
+    piece.position.set(x, y, z);
+    piece.userData.stickers = {};   // material index -> sticker mesh
+    // One flat colored tile on each outside face, with a gap between neighbors
+    DIRS.forEach((d, idx) => {
+      if (x * d[0] + y * d[1] + z * d[2] !== 1) return;
+      const n = new THREE.Vector3(d[0], d[1], d[2]);
+      const smat = new THREE.MeshLambertMaterial({ color: COLOR_BY_IDX[idx], side: THREE.DoubleSide, transparent: false, opacity: 1 });
+      const sticker = new THREE.Mesh(stickerGeo, smat);
+      sticker.position.copy(n).multiplyScalar(0.4776);
+      sticker.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
+      piece.add(sticker);
+      piece.userData.stickers[idx] = sticker;
+      stickerMeshes.push(sticker);
+    });
+    allPieces.push(piece);
+    cube.add(piece);
+  }
+
+  const v = a => new THREE.Vector3(a[0], a[1], a[2]);
+  const findPiece = pos => allPieces.find(p =>
+    p.position.x === pos.x && p.position.y === pos.y && p.position.z === pos.z);
+
+  // Material index for a direction
+  function faceIndex(d) {
+    const x = Math.round(d.x), y = Math.round(d.y), z = Math.round(d.z);
+    if (x === 1) return 0;
+    if (x === -1) return 1;
+    if (y === 1) return 2;
+    if (y === -1) return 3;
+    if (z === 1) return 4;
+    return 5;
+  }
+
+  // ---------- Letter scheme ----------
+  // Faces in order: top, left, front, right, back, bottom.
+  // Each face is read clockwise as seen from outside, starting at its top edge.
+  // The top face's top edge is the back edge.
+  const FACES = [
+    { name: 'Top',    n: [0, 1, 0],  mat: 2, top: [0, 0, -1], right: [1, 0, 0],  bottom: [0, 0, 1],  left: [-1, 0, 0] },
+    { name: 'Left',   n: [-1, 0, 0], mat: 1, top: [0, 1, 0],  right: [0, 0, 1],  bottom: [0, -1, 0], left: [0, 0, -1] },
+    { name: 'Front',  n: [0, 0, 1],  mat: 4, top: [0, 1, 0],  right: [1, 0, 0],  bottom: [0, -1, 0], left: [-1, 0, 0] },
+    { name: 'Right',  n: [1, 0, 0],  mat: 0, top: [0, 1, 0],  right: [0, 0, -1], bottom: [0, -1, 0], left: [0, 0, 1] },
+    { name: 'Back',   n: [0, 0, -1], mat: 5, top: [0, 1, 0],  right: [-1, 0, 0], bottom: [0, -1, 0], left: [1, 0, 0] },
+    { name: 'Bottom', n: [0, -1, 0], mat: 3, top: [0, 0, 1],  right: [1, 0, 0],  bottom: [0, 0, -1], left: [-1, 0, 0] }
+  ];
+  const EDGE_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWX';
+  const CORNER_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWX';
+  const EDGE_NAMES = ['top edge', 'right edge', 'bottom edge', 'left edge'];
+  const CORNER_NAMES = ['top-left corner', 'top-right corner', 'bottom-right corner', 'bottom-left corner'];
+
+  const locations = { edge: [], corner: [] };
+  function addLocation(list, pos, face, letter, label) {
+    const loc = { pos, normal: v(face.n), label, letter };
+    list.push(loc);
+    // Link the tile to its location so a click can be matched back to it
+    const sticker = findPiece(pos).userData.stickers[face.mat];
+    sticker.userData.loc = loc;
+    loc.mesh = sticker;
+  }
+
+  FACES.forEach((f, fi) => {
+    const n = v(f.n);
+    const dirs = [f.top, f.right, f.bottom, f.left].map(v);
+    dirs.forEach((d, k) => {
+      addLocation(locations.edge, n.clone().add(d), f, EDGE_LETTERS[fi * 4 + k], `${f.name} face, ${EDGE_NAMES[k]}`);
+    });
+    // Corners clockwise from top-left: TL = top+left, TR = top+right, BR = bottom+right, BL = bottom+left
+    [[0, 3], [0, 1], [2, 1], [2, 3]].forEach(([a, b], k) => {
+      addLocation(locations.corner, n.clone().add(dirs[a]).add(dirs[b]), f,
+        CORNER_LETTERS[fi * 4 + k], `${f.name} face, ${CORNER_NAMES[k]}`);
+    });
+  });
+
+  // Face-center tiles have no letter, so they are not clickable and get no letter
+  for (let i = stickerMeshes.length - 1; i >= 0; i--) {
+    if (!stickerMeshes[i].userData.loc) stickerMeshes.splice(i, 1);
+  }
+
+  // ---------- Quiz state ----------
+  const $ = id => document.getElementById(id);
+  const promptEl = $('prompt'), answerEl = $('answer'), feedbackEl = $('feedback');
+  const scoreEl = $('score'), actionBtn = $('action');
+
+  let mode = 'edge';
+  let timeLimit = 0;          // seconds; 0 = practice (no timer)
+  let running = false;
+  let endAt = 0;
+  let clockId = null, pendingId = null;
+  let locked = false;
+  let current = null;
+  let correct = 0, attempts = 0;
+  let highlighted = null;     // { mat, color, opacity }
+
+  // Hidden timing and miss tracking, kept per location for the session
+  const stats = {};
+  let questionStart = 0;
+
+  function recordAnswer(loc, ok, ms) {
+    const s = stats[loc.label] || (stats[loc.label] = { attempts: 0, misses: 0, ms: 0 });
+    s.attempts++;
+    if (!ok) s.misses++;
+    s.ms += ms;
+  }
+
+  // Higher score = missed more often, then slower on average
+  function weakScore(loc) {
+    const s = stats[loc.label];
+    if (!s) return 0;
+    return (s.misses / s.attempts) * 10 + (s.ms / s.attempts) / 10000;
+  }
+
+  // Find mode: which tile type to quiz (edge or corner)
+  let revType = 'edge';
+  // Edges or corners for Find mode
+  function poolFor(m) {
+    return m === 'reverse' ? locations[revType] : locations[m];
+  }
+
+  // Practice and timed modes use a shuffled deck, so every location comes up once before any repeats
+  let deck = [];
+  let deckMode = null;
+  function pickLocation() {
+    if (mode === 'weak') {
+      // Weak spots: choose randomly among the 5 locations you struggle with most
+      const all = [...locations.edge, ...locations.corner];
+      const ranked = all
+        .map(loc => ({ loc, score: weakScore(loc) + Math.random() * 0.01 }))
+        .sort((a, b) => b.score - a.score);
+      const top = ranked.slice(0, 5);
+      return top[Math.floor(Math.random() * top.length)].loc;
+    }
+    if (deckMode !== mode || deck.length === 0) {
+      deck = [...poolFor(mode)];
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+      deckMode = mode;
+    }
+    return deck.pop();
+  }
+
+  function clearHighlight() {
+    if (highlighted) {
+      highlighted.mat.color.setHex(highlighted.color);
+      highlighted.mat.opacity = highlighted.opacity;
+      highlighted.mat.emissive.setHex(0x000000);
+    }
+    highlighted = null;
+  }
+
+  function highlightLoc(loc) {
+    clearHighlight();
+    clearHover();
+    const mat = loc.mesh.material;
+    highlighted = { mat, color: mat.color.getHex(), opacity: mat.opacity };
+    mat.color.setHex(HIGHLIGHT);
+    mat.emissive.setHex(HIGHLIGHT);
+    mat.opacity = 1;
+  }
+
+  function updateScore() {
+    if (timeLimit === 0) {
+      scoreEl.textContent = `Correct: ${correct} / ${attempts}`;
+    } else if (running) {
+      const left = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+      scoreEl.textContent = `Time left: ${left}s · Correct: ${correct}`;
+    }
+  }
+
+  function nextQuestion() {
+    clearHighlight();
+    // Return the cube to its original position for every question
+    cube.quaternion.setFromEuler(new THREE.Euler(0.25, 0, 0));
+    velX = 0;
+    velY = 0;
+
+    const loc = pickLocation();
+    questionStart = performance.now();
+    current = { letter: loc.letter, label: loc.label, loc };
+    locked = false;
+    answerEl.value = '';
+    feedbackEl.textContent = '';
+    feedbackEl.className = '';
+
+    if (mode === 'reverse') {
+      // Show a letter; the player clicks the matching tile
+      promptEl.textContent = `Find: ${loc.letter}`;
+      answerEl.disabled = true;
+    } else {
+      // Highlight a tile; the player types its letter
+      highlightLoc(loc);
+      promptEl.textContent = loc.label;
+      answerEl.disabled = false;
+      answerEl.focus();
+    }
+  }
+
+  function advanceAfter(ms) {
+    locked = true;
+    clearTimeout(pendingId);
+    pendingId = setTimeout(() => {
+      pendingId = null;
+      if (running) nextQuestion();
+    }, ms);
+  }
+
+  // Answer typed: judge immediately
+  answerEl.addEventListener('input', () => {
+    if (!running || locked || !current || mode === 'reverse') return;
+    const given = answerEl.value.trim();
+    if (!given) return;
+    attempts++;
+    const ok = given.toLowerCase() === current.letter.toLowerCase();
+    recordAnswer(current.loc, ok, performance.now() - questionStart);
+    if (ok) {
+      correct++;
+      feedbackEl.className = 'ok';
+      feedbackEl.textContent = `Correct: ${current.letter}`;
+      advanceAfter(250);
+    } else {
+      feedbackEl.className = 'bad';
+      feedbackEl.textContent = `Wrong, it is ${current.letter}`;
+      advanceAfter(900);
+    }
+    updateScore();
+  });
+
+  // Which visible tile is under the pointer: the one whose on-screen center is closest
+  function tileAt(clientX, clientY) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    // Only count a click that actually lands on a tile; empty space is ignored
+    if (!raycaster.intersectObjects(stickerMeshes, false).length) return null;
+    const px = clientX - rect.left, py = clientY - rect.top;
+    let best = null, bestDist = Infinity;
+    const center = new THREE.Vector3(), normal = new THREE.Vector3(), quat = new THREE.Quaternion();
+    stickerMeshes.forEach(s => {
+      s.getWorldPosition(center);
+      normal.set(0, 0, 1).applyQuaternion(s.getWorldQuaternion(quat));
+      if (normal.dot(camera.position.clone().sub(center).normalize()) <= 0) return;   // facing away
+      const p = center.clone().project(camera);
+      const sx = (p.x + 1) / 2 * rect.width;
+      const sy = (1 - p.y) / 2 * rect.height;
+      const d = Math.hypot(sx - px, sy - py);
+      if (d < bestDist) { bestDist = d; best = s; }
+    });
+    return best;
+  }
+
+  // Hover: lighten the tile under the pointer
+  let pointerPos = null;
+  let hovered = null, hoveredColor = null;
+  function clearHover() {
+    if (hovered) hovered.material.color.setHex(hoveredColor);
+    hovered = null;
+    hoveredColor = null;
+  }
+  function setHover(s) {
+    if (s === hovered) return;
+    clearHover();
+    if (!s || (highlighted && highlighted.mat === s.material)) return;
+    hovered = s;
+    hoveredColor = s.material.color.getHex();
+    s.material.color.lerp(new THREE.Color(0xffffff), 0.4);
+  }
+
+  // Left-click a tile (Find tile mode)
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  function handleTileClick(e) {
+    if (mode !== 'reverse' || !running || locked || !current) return;
+    const best = tileAt(e.clientX, e.clientY);
+    if (!best) return;
+    const clicked = best.userData.loc;
+    attempts++;
+    const ok = clicked === current.loc;
+    recordAnswer(current.loc, ok, performance.now() - questionStart);
+    if (ok) {
+      correct++;
+      feedbackEl.className = 'ok';
+      feedbackEl.textContent = `Correct: ${current.letter} is ${current.label}`;
+      advanceAfter(600);
+    } else {
+      feedbackEl.className = 'bad';
+      feedbackEl.textContent = `Wrong, ${current.letter} is ${current.label}`;
+      highlightLoc(current.loc);
+      advanceAfter(1200);
+    }
+    updateScore();
+  }
+
+  // Skip (practice) or Play again (after a timed run ends)
+  actionBtn.onclick = () => {
+    if (!running && timeLimit > 0) { startRun(); return; }
+    if (!running || locked || !current) return;
+    attempts++;
+    recordAnswer(current.loc, false, performance.now() - questionStart);
+    feedbackEl.className = 'bad';
+    feedbackEl.textContent = mode === 'reverse' ? `That was ${current.label}` : `It is ${current.letter}`;
+    if (mode === 'reverse') highlightLoc(current.loc);
+    updateScore();
+    advanceAfter(900);
+  };
+
+  function endRun() {
+    running = false;
+    locked = true;
+    clearInterval(clockId); clockId = null;
+    clearTimeout(pendingId); pendingId = null;
+    clearHighlight();
+    answerEl.disabled = true;
+    promptEl.textContent = "Time's up!";
+    feedbackEl.className = '';
+    feedbackEl.textContent = '';
+    scoreEl.textContent = `Final: ${correct} correct (${attempts} answered)`;
+    actionBtn.textContent = 'Play again';
+  }
+
+  // ---------- Answer key: letters drawn on every tile ----------
+  const letterTextures = {};
+  function letterTexture(letter) {
+    if (!letterTextures[letter]) {
+      const c = document.createElement('canvas');
+      c.width = c.height = 128;
+      const g = c.getContext('2d');
+      g.fillStyle = '#ffffff';
+      g.fillRect(0, 0, 128, 128);
+      g.fillStyle = '#000000';
+      g.font = 'bold 84px sans-serif';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText(letter, 64, 68);
+      letterTextures[letter] = new THREE.CanvasTexture(c);
+    }
+    return letterTextures[letter];
+  }
+
+  function setLetters(on) {
+    stickerMeshes.forEach(s => {
+      s.material.map = on ? letterTexture(s.userData.loc.letter) : null;
+      s.material.needsUpdate = true;
+    });
+  }
+
+  function enterKeyMode() {
+    clearInterval(clockId); clearTimeout(pendingId);
+    clockId = null; pendingId = null;
+    running = false;
+    locked = true;
+    current = null;
+    clearHighlight();
+    clearHover();
+    setLetters(true);
+    promptEl.textContent = 'Answer key';
+    answerEl.disabled = true;
+    feedbackEl.textContent = '';
+    feedbackEl.className = '';
+    scoreEl.textContent = '';
+  }
+
+  function startRun() {
+    if (mode === 'key') { mode = 'edge'; setActive(modeIds, 'modeEdge'); }
+    setLetters(false);
+    clearInterval(clockId); clearTimeout(pendingId);
+    clockId = null; pendingId = null;
+    correct = 0; attempts = 0;
+    running = true;
+    actionBtn.textContent = 'Skip';
+    if (timeLimit > 0) {
+      endAt = Date.now() + timeLimit * 1000;
+      clockId = setInterval(() => {
+        if (Date.now() >= endAt) endRun();
+        else updateScore();
+      }, 100);
+    }
+    nextQuestion();
+    updateScore();
+  }
+
+  // ---------- Controls ----------
+  function setActive(ids, activeId) {
+    ids.forEach(id => $(id).classList.toggle('active', id === activeId));
+  }
+
+  const modeIds = ['modeEdge', 'modeCorner', 'modeWeak', 'modeRevEdge', 'modeRevCorner', 'modeKey'];
+  $('modeEdge').onclick = () => { mode = 'edge'; setActive(modeIds, 'modeEdge'); startRun(); };
+  $('modeCorner').onclick = () => { mode = 'corner'; setActive(modeIds, 'modeCorner'); startRun(); };
+  $('modeWeak').onclick = () => { mode = 'weak'; setActive(modeIds, 'modeWeak'); startRun(); };
+  $('modeRevEdge').onclick = () => { mode = 'reverse'; revType = 'edge'; deck = []; setActive(modeIds, 'modeRevEdge'); startRun(); };
+  $('modeRevCorner').onclick = () => { mode = 'reverse'; revType = 'corner'; deck = []; setActive(modeIds, 'modeRevCorner'); startRun(); };
+  $('modeKey').onclick = () => { mode = 'key'; setActive(modeIds, 'modeKey'); enterKeyMode(); };
+
+  const timeButtons = { timeNone: 0, time15: 15, time30: 30, time60: 60 };
+  Object.entries(timeButtons).forEach(([id, secs]) => {
+    $(id).onclick = () => {
+      timeLimit = secs;
+      setActive(Object.keys(timeButtons), id);
+      startRun();
+    };
+  });
+
+  // ---------- Rotation (right-drag) and tile clicks (left-click) ----------
+  const canvas = renderer.domElement;
+  const AXES = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0)];
+  function spin(rx, ry) {
+    cube.rotateOnWorldAxis(AXES[0], rx);
+    cube.rotateOnWorldAxis(AXES[1], ry);
+  }
+
+  let dragging = false, lastX = 0, lastY = 0, velX = 0, velY = 0;
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+  canvas.addEventListener('pointerdown', e => {
+    if (e.button === 0) { handleTileClick(e); return; }
+    if (e.button !== 2) return;
+    dragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    canvas.setPointerCapture(e.pointerId);
+    canvas.classList.add('grabbing');
+  });
+
+  canvas.addEventListener('pointermove', e => {
+    pointerPos = { x: e.clientX, y: e.clientY };
+    if (!dragging) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    velY = dx * 0.005;
+    velX = dy * 0.005;
+    spin(velX, velY);
+  });
+
+  const stopDrag = () => { dragging = false; canvas.classList.remove('grabbing'); };
+  canvas.addEventListener('pointerup', stopDrag);
+  canvas.addEventListener('pointercancel', stopDrag);
+  canvas.addEventListener('pointerleave', () => { pointerPos = null; });
+
+  // Letters always go to the answer box, so you never need to click it.
+  // Escape restarts the run and resets the cube.
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      startRun();
+      return;
+    }
+    if (document.activeElement !== answerEl && running && !locked && !answerEl.disabled && /^[a-zA-Z]$/.test(e.key)) {
+      e.preventDefault();
+      answerEl.focus();
+      answerEl.value = e.key;
+      answerEl.dispatchEvent(new Event('input'));
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    if (dragging || !pointerPos) clearHover();
+    else setHover(tileAt(pointerPos.x, pointerPos.y));
+    if (!dragging) {
+      spin(velX, velY);
+      velX *= 0.95;
+      velY *= 0.95;
+    }
+    renderer.render(scene, camera);
+  }
+
+  startRun();
+  animate();
+</script>
+</body>
+</html>
