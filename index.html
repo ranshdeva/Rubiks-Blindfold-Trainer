@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" type="image/png" href="favicon.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rubik's Cube Trainer/title>
+<title>Ransh's Cube Training</title>
 <style>
   * { box-sizing: border-box; }
   html { background: #0b2545; }
@@ -732,9 +731,9 @@
     GD: "R U R' U' D R2 U' R U' R' U R' U R2 D'"
   };
   // Case names shown to the player
-  const PLL_LABEL = { J: 'Jb', T: 'T', A: 'Ja', RA: 'Ra', RB: 'Rb', F: 'F', V: 'V', AA: 'Ab', AB: 'Aa', GA: 'Gb', GB: 'Ga', GC: 'Gd', GD: 'Gc' };
+  const PLL_LABEL = { J: 'Jb', T: 'T', A: 'Ja', RA: 'Ra', RB: 'Rb', F: 'F', V: 'V', AA: 'Ab', AB: 'Aa', GA: 'Gb', GB: 'Ga', GC: 'Gc', GD: 'Gd' };
   // What to type to answer each case (J and R are typed followed by A or B)
-  const PLL_ANSWER = { J: 'JB', A: 'JA', T: 'T', RA: 'RA', RB: 'RB', F: 'F', V: 'V', AA: 'AB', AB: 'AA', GA: 'GB', GB: 'GA', GC: 'GD', GD: 'GC' };
+  const PLL_ANSWER = { J: 'JB', A: 'JA', T: 'T', RA: 'RA', RB: 'RB', F: 'F', V: 'V', AA: 'AB', AB: 'AA', GA: 'GB', GB: 'GA', GC: 'GC', GD: 'GD' };
   const pllPrompt = $('pll-prompt'), pllAnswer = $('pll-answer'), pllFeedback = $('pll-feedback');
   const pllScore = $('pll-score'), pllNext = $('pll-next');
   let pllCase = null, pllLocked = true, pllCorrect = 0, pllTotal = 0;
