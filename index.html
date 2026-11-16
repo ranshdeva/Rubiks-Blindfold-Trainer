@@ -3,12 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Cube Letter Trainer</title>
-  <link rel="icon" type="image/png" href="favicon.png">
+<title>Ransh's Cube Training</title>
 <style>
-  :root { box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
-  html, body { margin: 0; height: 100%; background: #1e1e2e; overflow: hidden; font-family: sans-serif; color: #eee; }
-  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  * { box-sizing: border-box; }
+  html { background: #0b2545; }
+  body { margin: 0; min-height: 100%; background: #0b2545; color: #e8f1fb; font-family: sans-serif; }
+  [hidden] { display: none !important; }
+
+  /* ---------- Home page ---------- */
+  header { padding: 40px 20px 20px; text-align: center; }
+  header h1 { margin: 0 0 8px; font-size: 32px; font-weight: 600; }
+  header p { margin: 0; color: #aaa; font-size: 16px; }
+  main { max-width: 760px; margin: 0 auto; padding: 20px; }
+  h2 { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #8fb3d9; margin: 0 0 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+  .tile { aspect-ratio: 1 / 1; border-radius: 14px; background: #1b3a5c; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; text-align: center; padding: 16px; }
+  a.tile { background: #4f7cff; color: #fff; text-decoration: none; font-size: 18px; font-weight: 600;
+           transition: transform 0.15s, background 0.15s; }
+  a.tile:hover { transform: translateY(-3px); background: #5f8aff; }
+  a.tile small { font-size: 13px; font-weight: normal; margin-top: 8px; opacity: 0.85; }
+  footer { text-align: center; color: #8fb3d9; font-size: 13px; padding: 40px 20px 30px; }
+
+  /* ---------- Trainer ---------- */
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
   canvas.grabbing { cursor: grabbing; }
   #panel { position: absolute; top: 12px; left: 12px; width: min(calc(100vw - 24px), 300px);
            background: transparent; border-radius: 12px; padding: 12px; z-index: 2; text-align: center; }
@@ -22,36 +40,98 @@
   #answer { width: 56px; font-size: 20px; text-align: center; padding: 5px; border-radius: 6px; border: 0; background: #222; color: #fff; caret-color: #fff; outline: 2px solid transparent; }
   #answer:focus { outline: 2px solid #fff; }
   #feedback { min-height: 20px; margin-top: 6px; font-size: 14px; }
-  #score { color: #aaa; font-size: 13px; margin-top: 4px; min-height: 16px; }
-  #hint { position: absolute; bottom: 12px; width: 100%; text-align: center; color: #aaa; font-size: 14px; pointer-events: none; z-index: 1; }
-  .ok { color: #6f6; } .bad { color: #f66; }
+  #score { color: #cfe0f2; font-size: 13px; margin-top: 4px; min-height: 16px; }
+  #hint { position: absolute; bottom: 12px; width: 100%; text-align: center; color: #cfe0f2; font-size: 14px; pointer-events: none; z-index: 1; }
+  #home-link { position: absolute; bottom: 12px; left: 12px; z-index: 2; background: #333a5c; color: #eee;
+               padding: 7px 12px; border-radius: 8px; font-size: 13px; text-decoration: none; }
+  .ok { color: #7be07b; } .bad { color: #ff7a7a; }
+  #pll-title { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); margin: 0; z-index: 2;
+               font-size: 22px; font-weight: 600; color: #e8f1fb; white-space: nowrap; pointer-events: none; }
+  #pll-quiz { position: absolute; top: 12px; right: 12px; width: min(calc(100vw - 24px), 260px); padding: 12px; z-index: 2; text-align: center; }
+  #pll-quiz button { background: #333a5c; color: #eee; border: 0; border-radius: 8px; padding: 7px 10px; font-size: 13px; cursor: pointer; }
+  #pll-prompt { font-size: 17px; margin: 10px 0 6px; min-height: 24px; }
+  #pll-answer { width: 56px; font-size: 20px; text-align: center; padding: 5px; border-radius: 6px; border: 0; background: #222; color: #fff; caret-color: #fff; outline: 2px solid transparent; }
+  #pll-answer:focus { outline: 2px solid #fff; }
+  #pll-feedback { min-height: 20px; margin-top: 6px; font-size: 14px; }
+  #pll-score { color: #cfe0f2; font-size: 13px; margin-top: 4px; min-height: 16px; }
+  #pll-hint { position: absolute; bottom: 12px; width: 100%; text-align: center; color: #cfe0f2; font-size: 14px; pointer-events: none; z-index: 1; }
+  #pll-home { position: absolute; bottom: 12px; left: 12px; z-index: 2; background: #333a5c; color: #eee;
+              padding: 7px 12px; border-radius: 8px; font-size: 13px; text-decoration: none; }
+  #trainer-title { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); margin: 0; z-index: 2;
+                   font-size: 22px; font-weight: 600; color: #e8f1fb; white-space: nowrap; pointer-events: none; }
 </style>
 </head>
 <body>
-<div id="panel">
-  <div class="row">
-    <button id="modeEdge" class="active">Edges</button>
-    <button id="modeCorner">Corners</button>
-    <button id="modeWeak">Weak spots</button>
-    <button id="modeKey">Answer key</button>
-    <button id="modeRevEdge">Find edge</button>
-    <button id="modeRevCorner">Find corner</button>
+
+<!-- Home page -->
+<section id="home">
+  <header>
+    <h1>Cube Training</h1>
+  </header>
+  <main>
+    <h2>Exercises</h2>
+    <div class="grid">
+      <a class="tile" href="#trainer">
+        Blindfold Trainer
+        <small>Edges, corners, timed runs</small>
+      </a>
+      <a class="tile" href="#pll">
+        PLL Recognition
+        <small>Jb, Ja, T, F, V, Ra, Rb, Aa, Ab and G perms</small>
+      </a>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+      <div class="tile"></div>
+    </div>
+  </main>
+  <footer>Built by Ransh</footer>
+</section>
+
+<!-- Trainer -->
+<section id="trainer" hidden>
+  <h1 id="trainer-title">Cube Training</h1>
+  <div id="panel">
+    <div class="row">
+      <button id="modeEdge" class="active">Edges</button>
+      <button id="modeCorner">Corners</button>
+      <button id="modeWeak">Weak spots</button>
+      <button id="modeKey">Answer key</button>
+      <button id="modeRevEdge">Find edge</button>
+      <button id="modeRevCorner">Find corner</button>
+    </div>
+    <div class="row">
+      <button id="timeNone" class="active">Practice</button>
+      <button id="time15">15 s</button>
+      <button id="time30">30 s</button>
+      <button id="time60">1 min</button>
+    </div>
   </div>
-  <div class="row">
-    <button id="timeNone" class="active">Practice</button>
-    <button id="time15">15 s</button>
-    <button id="time30">30 s</button>
-    <button id="time60">1 min</button>
+  <div id="quiz">
+    <div id="prompt"></div>
+    <input id="answer" maxlength="1" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div id="feedback"></div>
+    <div id="score"></div>
+    <div class="row"><button id="action">Skip</button></div>
   </div>
+  <div id="hint">Drag to turn the cube · Tap a tile · Esc to reset</div>
+  <a id="home-link" href="#home">Home</a>
+</section>
+
+<!-- PLL recognition -->
+<section id="pll" hidden>
+  <h1 id="pll-title">PLL Recognition</h1>
+  <div id="pll-quiz">
+    <div id="pll-prompt"></div>
+    <input id="pll-answer" maxlength="12" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div id="pll-feedback"></div>
+    <div id="pll-score"></div>
+    <div class="row"><button id="pll-next">Skip</button></div>
   </div>
-<div id="quiz">
-  <div id="prompt"></div>
-  <input id="answer" maxlength="1" autocomplete="off" autocapitalize="off" spellcheck="false">
-  <div id="feedback"></div>
-  <div id="score"></div>
-  <div class="row"><button id="action">Skip</button></div>
-</div>
-<div id="hint">Right-drag to turn the cube · Esc to reset</div>
+  <div id="pll-hint">Type J, A, or R then A or B · G then A to D · or T, F, V · Drag to turn the cube</div>
+  <a id="pll-home" href="#home">Home</a>
+</section>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
   // ---------- Scene ----------
@@ -61,6 +141,7 @@
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(devicePixelRatio);
+  renderer.setClearColor(0x0b2545, 1);
   renderer.setSize(innerWidth, innerHeight);
   document.body.appendChild(renderer.domElement);
 
@@ -75,7 +156,7 @@
   // ---------- Cube ----------
   const cube = new THREE.Group();
   scene.add(cube);
-  cube.rotation.set(0.25, 0, 0);
+  cube.rotation.set(0.4014, 0, 0);
 
   // BoxGeometry material order: +x, -x, +y, -y, +z, -z
   const DIRS = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
@@ -92,6 +173,8 @@
     // The piece body is invisible; only the stickers are drawn
     const piece = new THREE.Mesh(boxGeo, [hiddenMat(), hiddenMat(), hiddenMat(), hiddenMat(), hiddenMat(), hiddenMat()]);
     piece.position.set(x, y, z);
+    piece.userData.home = piece.position.clone();
+    piece.userData.homeQ = new THREE.Quaternion();
     piece.userData.stickers = {};   // material index -> sticker mesh
     // One flat colored tile on each outside face, with a gap between neighbors
     DIRS.forEach((d, idx) => {
@@ -264,7 +347,7 @@
   function nextQuestion() {
     clearHighlight();
     // Return the cube to its original position for every question
-    cube.quaternion.setFromEuler(new THREE.Euler(0.25, 0, 0));
+    cube.quaternion.setFromEuler(new THREE.Euler(0.4014, 0, 0));
     velX = 0;
     velY = 0;
 
@@ -320,6 +403,8 @@
   });
 
   // Which visible tile is under the pointer: the one whose on-screen center is closest
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
   function tileAt(clientX, clientY) {
     const rect = renderer.domElement.getBoundingClientRect();
     pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
@@ -360,9 +445,7 @@
     s.material.color.lerp(new THREE.Color(0xffffff), 0.4);
   }
 
-  // Left-click a tile (Find tile mode)
-  const raycaster = new THREE.Raycaster();
-  const pointer = new THREE.Vector2();
+  // Tap a tile (Find mode)
   function handleTileClick(e) {
     if (mode !== 'reverse' || !running || locked || !current) return;
     const best = tileAt(e.clientX, e.clientY);
@@ -495,10 +578,18 @@
     };
   });
 
-  // ---------- Rotation (right-drag) and tile clicks (left-click) ----------
+  // ---------- Rotation (drag) and tile taps ----------
   const canvas = renderer.domElement;
   const AXES = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0)];
+  const PLL_TILT = 0.2443;   // fixed 14 degree tilt on the PLL page, so white stays on top
   function spin(rx, ry) {
+    // PLL page turns only around the vertical axis (the orange, green, red, blue ring)
+    if (pllView) {
+      // Turn around the world vertical axis only; the tilt is always applied first
+      pllYaw += ry;
+      cube.rotation.set(PLL_TILT, pllYaw, 0);
+      return;
+    }
     cube.rotateOnWorldAxis(AXES[0], rx);
     cube.rotateOnWorldAxis(AXES[1], ry);
   }
@@ -506,9 +597,15 @@
   let dragging = false, lastX = 0, lastY = 0, velX = 0, velY = 0;
   canvas.addEventListener('contextmenu', e => e.preventDefault());
 
+  // Press and drag rotates the cube; a press with no real movement is a tap on a tile
+  let pressX = 0, pressY = 0, pressButton = -1, pressed = false, moved = false;
   canvas.addEventListener('pointerdown', e => {
-    if (e.button === 0) { handleTileClick(e); return; }
-    if (e.button !== 2) return;
+    if (e.button !== 0 && e.button !== 2) return;
+    pressed = true;
+    moved = false;
+    pressButton = e.button;
+    pressX = e.clientX;
+    pressY = e.clientY;
     dragging = true;
     lastX = e.clientX;
     lastY = e.clientY;
@@ -519,6 +616,7 @@
   canvas.addEventListener('pointermove', e => {
     pointerPos = { x: e.clientX, y: e.clientY };
     if (!dragging) return;
+    if (Math.hypot(e.clientX - pressX, e.clientY - pressY) > 6) moved = true;
     const dx = e.clientX - lastX;
     const dy = e.clientY - lastY;
     lastX = e.clientX;
@@ -528,14 +626,26 @@
     spin(velX, velY);
   });
 
-  const stopDrag = () => { dragging = false; canvas.classList.remove('grabbing'); };
-  canvas.addEventListener('pointerup', stopDrag);
-  canvas.addEventListener('pointercancel', stopDrag);
+  const endPress = e => {
+    const wasTap = pressed && !moved && pressButton === 0;
+    pressed = false;
+    dragging = false;
+    canvas.classList.remove('grabbing');
+    if (wasTap && !document.body.classList.contains('pll')) handleTileClick(e);
+    if (document.body.classList.contains('pll')) pllAnswer.focus();
+  };
+  canvas.addEventListener('pointerup', endPress);
+  canvas.addEventListener('pointercancel', () => {
+    pressed = false;
+    dragging = false;
+    canvas.classList.remove('grabbing');
+  });
   canvas.addEventListener('pointerleave', () => { pointerPos = null; });
 
   // Letters always go to the answer box, so you never need to click it.
   // Escape restarts the run and resets the cube.
   window.addEventListener('keydown', e => {
+    if (!document.body.classList.contains('trainer')) return;   // only on the trainer page
     if (e.key === 'Escape') {
       startRun();
       return;
@@ -548,11 +658,325 @@
     }
   });
 
+  // Left and right arrow keys turn the cube on the trainer and PLL pages (same direction as dragging)
+  window.addEventListener('keydown', e => {
+    if (!document.body.classList.contains('trainer') && !document.body.classList.contains('pll')) return;
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      spin(0, e.key === 'ArrowRight' ? 0.1 : -0.1);
+    }
+  });
+
   window.addEventListener('resize', () => {
     camera.aspect = innerWidth / innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight);
   });
+
+  // ---------- Cube state helpers ----------
+  // Solid black body under the tiles (used on the PLL page), or invisible (used on the trainer page)
+  function setBody(solid) {
+    allPieces.forEach(p => p.material.forEach(m => {
+      m.visible = solid;
+      m.color.setHex(0x111111);
+    }));
+  }
+  function resetCube() {
+    allPieces.forEach(p => {
+      p.position.copy(p.userData.home);
+      p.quaternion.copy(p.userData.homeQ);
+    });
+  }
+
+  const AXIS_VEC = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1)];
+  // Turn the layer at coordinate `layer` along axis `ai` by `angle` radians
+  function turnLayer(ai, layer, angle) {
+    const layers = [].concat(layer);
+    const q = new THREE.Quaternion().setFromAxisAngle(AXIS_VEC[ai], angle);
+    allPieces.forEach(p => {
+      if (layers.some(l => Math.abs(p.position.getComponent(ai) - l) < 0.5)) {
+        p.position.applyQuaternion(q);
+        p.position.set(Math.round(p.position.x), Math.round(p.position.y), Math.round(p.position.z));
+        p.quaternion.premultiply(q);
+      }
+    });
+  }
+
+  // Face -> [axis, layer]. Clockwise as seen from the face is -90 degrees around its positive direction.
+  const FACE_TURN = { R: [0, 1], L: [0, -1], U: [1, 1], D: [1, -1], d: [1, -1], F: [2, 1], B: [2, -1] };
+  function applyAlg(alg) {
+    alg.split(' ').forEach(tok => {
+      const [ai, layer] = FACE_TURN[tok[0]];
+      const suffix = tok.slice(1);
+      const turns = suffix === "'" ? -1 : suffix === '2' ? 2 : 1;
+      const layers = tok[0] === 'd' ? [-1, 0] : layer;   // d = D and the middle layer
+      turnLayer(ai, layers, (-layer * Math.PI / 2) * turns);
+    });
+  }
+
+  // ---------- PLL recognition ----------
+  const PLL_ALGS = {
+    J: "R U R' F' R U R' U' R' F R2 U' R' U'",
+    T: "R U R' U' R' F R2 U' R' U' R U R' F'",
+    A: "L' U' L F L' U' L U L F' L2 U L U",
+    RA: "R U' R' U' R U R D R' U' R D' R' U2 R'",
+    RB: "R' U2 R U2 R' F R U R' U' R' F' R2 U'",
+    F: "R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R",
+    V: "R' U R' d' R' F' R2 U' R' U R' F R F",
+    AA: "R' F R' B2 R F' R' B2 R2",
+    AB: "R B' R F2 R' B R F2 R2",
+    GA: "R2 U R' U R' U' R U' R2 U' D R' U R D'",
+    GB: "R' U' R U D' R2 U R' U R U' R U' R2 D",
+    GC: "R2 U' R U' R U R' U R2 U D' R U' R' D",
+    GD: "R U R' U' D R2 U' R U' R' U R' U R2 D'"
+  };
+  // Case names shown to the player
+  const PLL_LABEL = { J: 'Jb', T: 'T', A: 'Ja', RA: 'Ra', RB: 'Rb', F: 'F', V: 'V', AA: 'Ab', AB: 'Aa', GA: 'Gb', GB: 'Ga', GC: 'Gd', GD: 'Gc' };
+  // What to type to answer each case (J and R are typed followed by A or B)
+  const PLL_ANSWER = { J: 'JB', A: 'JA', T: 'T', RA: 'RA', RB: 'RB', F: 'F', V: 'V', AA: 'AB', AB: 'AA', GA: 'GB', GB: 'GA', GC: 'GD', GD: 'GC' };
+  const pllPrompt = $('pll-prompt'), pllAnswer = $('pll-answer'), pllFeedback = $('pll-feedback');
+  const pllScore = $('pll-score'), pllNext = $('pll-next');
+  let pllCase = null, pllLocked = true, pllCorrect = 0, pllTotal = 0;
+  let pllTesting = false, pllTimer = null;
+  let pllLast = null;   // the case shown last, so the same case never repeats
+
+  function updatePllScore() {
+    pllScore.textContent = `Correct: ${pllCorrect} / ${pllTotal}`;
+  }
+
+  // Back to the starting view: 14 degree tilt, turned 20 degrees to the right
+  function resetPllView() {
+    pllYaw = 0.3491;
+    cube.rotation.set(PLL_TILT, pllYaw, 0);
+  }
+
+  // Count headlights (top-row edge tiles on each side) that match their side's color.
+  // A match on the front (green) side counts extra, so the front headlights are preferred.
+  function headlightScore() {
+    const sides = [
+      { n: [0, 0, 1],  color: COLORS.front },
+      { n: [1, 0, 0],  color: COLORS.right },
+      { n: [0, 0, -1], color: COLORS.back },
+      { n: [-1, 0, 0], color: COLORS.left }
+    ];
+    let score = 0, frontOk = false;
+    sides.forEach((side, i) => {
+      const piece = findPiece(new THREE.Vector3(side.n[0], 1, side.n[2]));
+      const local = new THREE.Vector3(side.n[0], side.n[1], side.n[2]).applyQuaternion(piece.quaternion.clone().invert());
+      const tile = piece.userData.stickers[faceIndex(local)];
+      if (tile.material.color.getHex() === side.color) {
+        score++;
+        if (i === 0) frontOk = true;
+      }
+    });
+    return score + (frontOk ? 10 : 0);
+  }
+
+  // The "big block": the 3 top-row tiles of one side (two corners and the edge between them).
+  // Scores how many of them match their side's color; a full block of 3 gets a bonus.
+  function blockScore() {
+    const sides = [
+      { n: [0, 0, 1],  color: COLORS.front, t: [1, 0, 0] },
+      { n: [1, 0, 0],  color: COLORS.right, t: [0, 0, 1] },
+      { n: [0, 0, -1], color: COLORS.back,  t: [1, 0, 0] },
+      { n: [-1, 0, 0], color: COLORS.left,  t: [0, 0, 1] }
+    ];
+    let best = 0;
+    sides.forEach(side => {
+      const N = new THREE.Vector3(side.n[0], side.n[1], side.n[2]);
+      let count = 0;
+      [-1, 0, 1].forEach(k => {
+        const piece = findPiece(new THREE.Vector3(side.n[0] + k * side.t[0], 1, side.n[2] + k * side.t[2]));
+        const local = N.clone().applyQuaternion(piece.quaternion.clone().invert());
+        if (piece.userData.stickers[faceIndex(local)].material.color.getHex() === side.color) count++;
+      });
+      const value = count + (count === 3 ? 10 : 0);
+      if (value > best) best = value;
+    });
+    return best;
+  }
+
+  // Rb: the goal is the most matching corners. A corner matches when its top
+  // tile and both side tiles match their face centers.
+  function rbScore() {
+    let matched = 0;
+    [[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(([sx, sz]) => {
+      const piece = findPiece(new THREE.Vector3(sx, 1, sz));
+      const want = [
+        { d: [0, 1, 0],  color: COLORS.up },
+        { d: [sx, 0, 0], color: sx > 0 ? COLORS.right : COLORS.left },
+        { d: [0, 0, sz], color: sz > 0 ? COLORS.front : COLORS.back }
+      ];
+      const ok = want.every(w => {
+        const local = new THREE.Vector3(w.d[0], w.d[1], w.d[2]).applyQuaternion(piece.quaternion.clone().invert());
+        return piece.userData.stickers[faceIndex(local)].material.color.getHex() === w.color;
+      });
+      if (ok) matched++;
+    });
+    return matched;
+  }
+
+  // V: the block is the front-left corner (green, orange, white) and the two edges next to it
+  // (green-white front edge and orange-white left edge). Each tile counts when its side
+  // tiles match their centers and its top tile is white.
+  function vBlockScore() {
+    const UP = [0, 1, 0], FRONT = [0, 0, 1], LEFT = [-1, 0, 0];
+    const tileOk = (pos, wants) => {
+      const piece = findPiece(pos);
+      return wants.every(([dir, color]) => {
+        const local = new THREE.Vector3(dir[0], dir[1], dir[2]).applyQuaternion(piece.quaternion.clone().invert());
+        return piece.userData.stickers[faceIndex(local)].material.color.getHex() === color;
+      });
+    };
+    const corner = tileOk(new THREE.Vector3(-1, 1, 1), [[UP, COLORS.up], [FRONT, COLORS.front], [LEFT, COLORS.left]]);
+    const edgeFront = tileOk(new THREE.Vector3(0, 1, 1), [[UP, COLORS.up], [FRONT, COLORS.front]]);
+    const edgeLeft = tileOk(new THREE.Vector3(-1, 1, 0), [[UP, COLORS.up], [LEFT, COLORS.left]]);
+    const count = [corner, edgeFront, edgeLeft].filter(Boolean).length;
+    return (corner ? 20 : 0) + count + (count === 3 ? 10 : 0);
+  }
+
+  // Build a case on a solved cube: its algorithm, then the top-layer turn that puts the headlights on the right colors
+  function buildPllCase(key) {
+    resetCube();
+    applyAlg(PLL_ALGS[key]);
+    let bestTurns = 0, bestScore = -1;
+    for (let k = 0; k < 4; k++) {
+      const useBlock = key === 'F' || key === 'J' || key === 'A';
+      const scorer = key === 'V' ? vBlockScore : useBlock ? blockScore : key === 'RB' ? rbScore : headlightScore;
+      const sc = scorer();
+      if (sc > bestScore) { bestScore = sc; bestTurns = k; }
+      turnLayer(1, 1, -Math.PI / 2);
+    }
+    // Four U turns bring the cube back to where it was; now apply the chosen number
+    for (let i = 0; i < bestTurns; i++) turnLayer(1, 1, -Math.PI / 2);
+    pllCase = key;
+  }
+
+  function newPllCase() {
+    pllTesting = false;
+    // Pick a random case, but never the same one as the last question
+    const letters = ['J', 'T', 'A', 'RA', 'RB', 'F', 'V', 'AA', 'AB', 'GA', 'GB', 'GC', 'GD'].filter(l => l !== pllLast);
+    pllLast = letters[Math.floor(Math.random() * letters.length)];
+    buildPllCase(pllLast);
+    pllLocked = false;
+    pllAnswer.value = '';
+    pllAnswer.disabled = false;
+    pllFeedback.textContent = '';
+    pllFeedback.className = '';
+    pllPrompt.textContent = 'Which case is this?';
+    updatePllScore();
+    pllAnswer.focus();
+  }
+
+  // Test mode: type "test" followed by a case code (for example testJB) to show that case
+  function showTestCase(code) {
+    const key = Object.keys(PLL_ANSWER).find(k => PLL_ANSWER[k] === code);
+    if (!key) return false;
+    buildPllCase(key);
+    pllTesting = true;
+    pllLocked = true;   // answers are off while testing
+    pllPrompt.textContent = `Test: ${PLL_LABEL[key]} perm`;
+    pllFeedback.textContent = 'Press Skip to go back to the quiz';
+    pllFeedback.className = '';
+    pllAnswer.value = '';
+    return true;
+  }
+
+  function judgePll(given) {
+    if (pllLocked) return;
+    pllTotal++;
+    const ok = given === PLL_ANSWER[pllCase];
+    pllLocked = true;
+    resetPllView();
+    if (ok) {
+      pllCorrect++;
+      pllFeedback.className = 'ok';
+      pllFeedback.textContent = `Correct: ${PLL_LABEL[pllCase]} perm`;
+    } else {
+      pllFeedback.className = 'bad';
+      pllFeedback.textContent = `Wrong, it's ${PLL_LABEL[pllCase]} perm`;
+    }
+    updatePllScore();
+    setTimeout(() => { if (document.body.classList.contains('pll')) newPllCase(); }, ok ? 600 : 1200);
+  }
+
+  pllAnswer.addEventListener('input', () => {
+    clearTimeout(pllTimer);
+    const raw = pllAnswer.value.trim().toUpperCase();
+    if (!raw) return;
+    if (raw.startsWith('TEST')) {
+      if (showTestCase(raw.slice(4))) return;   // a full case code was typed
+      return;                                    // still typing the code
+    }
+    if (pllLocked) return;
+    if (raw === 'J' || raw === 'R' || raw === 'A' || raw === 'G') return;      // wait for the next letter (A or B)
+    if ('TEST'.startsWith(raw)) {                // "T" might be the start of "test"
+      pllTimer = setTimeout(() => judgePll(raw), 400);
+      return;
+    }
+    judgePll(raw);
+  });
+
+  pllNext.onclick = () => {
+    clearTimeout(pllTimer);
+    if (pllTesting) { newPllCase(); return; }
+    if (pllLocked) return;
+    pllTotal++;
+    pllLocked = true;
+    resetPllView();
+    pllFeedback.className = 'bad';
+    pllFeedback.textContent = `It's ${PLL_LABEL[pllCase]} perm`;
+    updatePllScore();
+    setTimeout(() => { if (document.body.classList.contains('pll')) newPllCase(); }, 1200);
+  };
+
+  // ---------- Switch between home, trainer and PLL using the URL hash ----------
+  let pllView = false;   // true while the PLL page is showing
+  let pllYaw = 0;        // how far the PLL cube has been turned around the vertical axis
+  function showView() {
+    const onTrainer = location.hash === '#trainer';
+    const onPll = location.hash === '#pll';
+    const onCube = onTrainer || onPll;
+    const wasTrainer = document.body.classList.contains('trainer');
+    pllView = onPll;
+    document.body.classList.toggle('trainer', onTrainer);
+    document.body.classList.toggle('pll', onPll);
+    $('home').hidden = onCube;
+    $('trainer').hidden = !onTrainer;
+    $('pll').hidden = !onPll;
+    canvas.style.display = onCube ? 'block' : 'none';
+    setBody(onPll);
+    document.body.style.overflow = onCube ? 'hidden' : '';
+    window.scrollTo(0, 0);
+
+    // Leaving the trainer: stop its timers so nothing keeps highlighting tiles in the background
+    if (wasTrainer && !onTrainer) {
+      running = false;
+      clearInterval(clockId); clockId = null;
+      clearTimeout(pendingId); pendingId = null;
+    }
+    clearHighlight();
+    clearHover();
+    cube.rotation.order = 'XYZ';
+
+    if (onTrainer) {
+      resetCube();
+      startRun();
+    } else if (onPll) {
+      // Turn around the cube's own vertical axis first, then tilt, so the white face stays on top
+      cube.rotation.order = 'XYZ';
+      pllYaw = 0.3491;   // start turned 20 degrees to the right
+      cube.rotation.set(PLL_TILT, pllYaw, 0);
+      velX = 0;
+      velY = 0;
+      pllCorrect = 0;
+      pllTotal = 0;
+      newPllCase();
+    } else {
+      resetCube();
+    }
+  }
+  window.addEventListener('hashchange', showView);
 
   function animate() {
     requestAnimationFrame(animate);
@@ -567,6 +991,7 @@
   }
 
   startRun();
+  showView();
   animate();
 </script>
 </body>
