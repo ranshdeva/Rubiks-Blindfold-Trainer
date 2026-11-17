@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <link rel="icon" type="image/png" href="favicon.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ransh's Cube Training</title>
@@ -17,7 +16,7 @@
   header p { margin: 0; color: #aaa; font-size: 16px; }
   main { max-width: 760px; margin: 0 auto; padding: 20px; }
   h2 { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #8fb3d9; margin: 0 0 14px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
   .tile { aspect-ratio: 1 / 1; border-radius: 14px; background: #1b3a5c; display: flex; flex-direction: column;
           align-items: center; justify-content: center; text-align: center; padding: 16px; }
   a.tile { background: #4f7cff; color: #fff; text-decoration: none; font-size: 18px; font-weight: 600;
@@ -25,6 +24,35 @@
   a.tile:hover { transform: translateY(-3px); background: #5f8aff; }
   a.tile small { font-size: 13px; font-weight: normal; margin-top: 8px; opacity: 0.85; }
   footer { text-align: center; color: #8fb3d9; font-size: 13px; padding: 40px 20px 30px; }
+
+  /* ---------- PLL answer key ---------- */
+  #pllcase-title { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); margin: 0; z-index: 2;
+                   font-size: 22px; font-weight: 600; color: #e8f1fb; white-space: nowrap; pointer-events: none; }
+  #pllcase-alg { position: absolute; top: 48px; left: 50%; transform: translateX(-50%); z-index: 2;
+                 font-family: monospace; font-size: 15px; color: #cfe0f2; white-space: nowrap; pointer-events: none; }
+  #pllcase-back { position: absolute; bottom: 12px; left: 12px; z-index: 2; background: #333a5c; color: #eee;
+                  padding: 7px 12px; border-radius: 8px; font-size: 13px; text-decoration: none; }
+  #pllkey-list { text-align: center; }
+  #pllkey-list li { justify-content: center; flex-direction: column; align-items: center; gap: 4px; }
+  #pllkey-list .pll-alg { font-family: monospace; font-size: 14px; color: #cfe0f2; }
+  #pllkey-list a { color: #e8f1fb; text-decoration: underline; }
+  #pllkey-list a:hover { opacity: 0.8; }
+  .pllcase-step { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; background: #333a5c; color: #eee;
+                  border: 0; border-radius: 8px; padding: 10px 14px; font-size: 15px; cursor: pointer; }
+  #pllcase-prev { left: 12px; }
+  #pllcase-next { right: 12px; }
+  #pllcase-solve { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 2; background: #4f7cff; color: #fff;
+                   border: 0; border-radius: 8px; padding: 8px 16px; font-size: 14px; cursor: pointer; }
+
+  /* ---------- OLL list ---------- */
+  #oll { max-width: 860px; margin: 0 auto; padding: 20px; }
+  .page-title { text-align: center; font-size: 28px; font-weight: 600; margin: 20px 0 16px; }
+  .back-link { display: inline-block; background: #333a5c; color: #eee; padding: 7px 12px; border-radius: 8px; font-size: 13px; text-decoration: none; margin-bottom: 12px; }
+  .oll-list { list-style: none; padding: 0; margin: 0; }
+  .oll-list li { display: flex; align-items: baseline; gap: 12px; padding: 9px 0; border-bottom: 1px solid #1b3a5c; flex-wrap: wrap; }
+  .oll-list .num { width: 40px; font-weight: 600; }
+  .oll-list .shape { width: 180px; color: #8fb3d9; }
+  .oll-list .alg { font-family: monospace; font-size: 15px; }
 
   /* ---------- Trainer ---------- */
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
@@ -50,6 +78,7 @@
                font-size: 22px; font-weight: 600; color: #e8f1fb; white-space: nowrap; pointer-events: none; }
   #pll-quiz { position: absolute; top: 12px; right: 12px; width: min(calc(100vw - 24px), 260px); padding: 12px; z-index: 2; text-align: center; }
   #pll-quiz button { background: #333a5c; color: #eee; border: 0; border-radius: 8px; padding: 7px 10px; font-size: 13px; cursor: pointer; }
+  #pll-quiz button.active { background: #4f7cff; }
   #pll-prompt { font-size: 17px; margin: 10px 0 6px; min-height: 24px; }
   #pll-answer { width: 56px; font-size: 20px; text-align: center; padding: 5px; border-radius: 6px; border: 0; background: #222; color: #fff; caret-color: #fff; outline: 2px solid transparent; }
   #pll-answer:focus { outline: 2px solid #fff; }
@@ -78,15 +107,103 @@
       </a>
       <a class="tile" href="#pll">
         PLL Recognition
-        <small>Jb, Ja, T, F, V, Ra, Rb, Aa, Ab and G perms</small>
+        <small>Jb, Ja, T, F, V, Ra, Rb, Aa, Ab, G, E, Na, Nb, H, Ua, Ub and Z perms</small>
       </a>
-      <div class="tile"></div>
-      <div class="tile"></div>
+      <a class="tile" href="#oll">
+        OLL List
+        <small>All 57 cases</small>
+      </a>
+      <a class="tile" href="#pllkey">
+        PLL Answer Key
+        <small>Every case in 3D</small>
+      </a>
       <div class="tile"></div>
       <div class="tile"></div>
     </div>
   </main>
   <footer>Built by Ransh</footer>
+</section>
+
+<!-- PLL answer key -->
+<section id="pllkey" hidden>
+  <h1 class="page-title">PLL Answer Key</h1>
+  <a class="back-link" href="#home">Home</a>
+  <ul class="oll-list" id="pllkey-list"></ul>
+</section>
+
+<!-- One PLL case shown in 3D -->
+<section id="pllcase" hidden>
+  <h1 id="pllcase-title"></h1>
+  <div id="pllcase-alg"></div>
+  <a id="pllcase-back" href="#pllkey">Back to list</a>
+  <button id="pllcase-prev" class="pllcase-step">Back</button>
+  <button id="pllcase-next" class="pllcase-step">Next</button>
+  <button id="pllcase-solve">Solve</button>
+</section>
+
+<!-- OLL list -->
+<section id="oll" hidden>
+  <h1 class="page-title">OLL Cases</h1>
+  <a class="back-link" href="#home">Home</a>
+  <ul class="oll-list">
+      <li><span class="num">1</span><span class="shape">Dot</span><span class="alg">R U2 R2 F R F&#x27; U2 R&#x27; F R F&#x27;</span></li>
+      <li><span class="num">2</span><span class="shape">Dot</span><span class="alg">r U r&#x27; U2 r U2 R&#x27; U2 R U&#x27; r&#x27;</span></li>
+      <li><span class="num">3</span><span class="shape">Dot</span><span class="alg">r&#x27; R2 U R&#x27; U r U2 r&#x27; U M&#x27;</span></li>
+      <li><span class="num">4</span><span class="shape">Dot</span><span class="alg">M U&#x27; r U2 r&#x27; U&#x27; R U&#x27; R&#x27; M&#x27;</span></li>
+      <li><span class="num">5</span><span class="shape">Square Shape</span><span class="alg">l&#x27; U2 L U L&#x27; U l</span></li>
+      <li><span class="num">6</span><span class="shape">Square Shape</span><span class="alg">r U2 R&#x27; U&#x27; R U&#x27; r&#x27;</span></li>
+      <li><span class="num">7</span><span class="shape">Small Lightning Bolt</span><span class="alg">r U R&#x27; U R U2 r&#x27;</span></li>
+      <li><span class="num">8</span><span class="shape">Small Lightning Bolt</span><span class="alg">l&#x27; U&#x27; L U&#x27; L&#x27; U2 l</span></li>
+      <li><span class="num">9</span><span class="shape">Fish Shape</span><span class="alg">R U R&#x27; U&#x27; R&#x27; F R2 U R&#x27; U&#x27; F&#x27;</span></li>
+      <li><span class="num">10</span><span class="shape">Fish Shape</span><span class="alg">R U R&#x27; U R&#x27; F R F&#x27; R U2 R&#x27;</span></li>
+      <li><span class="num">11</span><span class="shape">Small Lightning Bolt</span><span class="alg">r U R&#x27; U R&#x27; F R F&#x27; R U2 r&#x27;</span></li>
+      <li><span class="num">12</span><span class="shape">Small Lightning Bolt</span><span class="alg">M&#x27; R&#x27; U&#x27; R U&#x27; R&#x27; U2 R U&#x27; R r&#x27;</span></li>
+      <li><span class="num">13</span><span class="shape">Knight Move Shape</span><span class="alg">F U R U&#x27; R2 F&#x27; R U R U&#x27; R&#x27;</span></li>
+      <li><span class="num">14</span><span class="shape">Knight Move Shape</span><span class="alg">R&#x27; F R U R&#x27; F&#x27; R F U&#x27; F&#x27;</span></li>
+      <li><span class="num">15</span><span class="shape">Knight Move Shape</span><span class="alg">l&#x27; U&#x27; l L&#x27; U&#x27; L U l&#x27; U l</span></li>
+      <li><span class="num">16</span><span class="shape">Knight Move Shape</span><span class="alg">r U r&#x27; R U R&#x27; U&#x27; r U&#x27; r&#x27;</span></li>
+      <li><span class="num">17</span><span class="shape">Dot</span><span class="alg">F R&#x27; F&#x27; R2 r&#x27; U R U&#x27; R&#x27; U&#x27; M&#x27;</span></li>
+      <li><span class="num">18</span><span class="shape">Dot</span><span class="alg">r U R&#x27; U R U2 r2 U&#x27; R U&#x27; R&#x27; U2 r</span></li>
+      <li><span class="num">19</span><span class="shape">Dot</span><span class="alg">r&#x27; R U R U R&#x27; U&#x27; M&#x27; R&#x27; F R F&#x27;</span></li>
+      <li><span class="num">20</span><span class="shape">Dot</span><span class="alg">r U R&#x27; U&#x27; M2 U R U&#x27; R&#x27; U&#x27; M&#x27;</span></li>
+      <li><span class="num">21</span><span class="shape">Cross</span><span class="alg">R U2 R&#x27; U&#x27; R U R&#x27; U&#x27; R U&#x27; R&#x27;</span></li>
+      <li><span class="num">22</span><span class="shape">Cross</span><span class="alg">R U2 R2 U&#x27; R2 U&#x27; R2 U2 R</span></li>
+      <li><span class="num">23</span><span class="shape">Cross</span><span class="alg">R2 D&#x27; R U2 R&#x27; D R U2 R</span></li>
+      <li><span class="num">24</span><span class="shape">Cross</span><span class="alg">r U R&#x27; U&#x27; r&#x27; F R F&#x27;</span></li>
+      <li><span class="num">25</span><span class="shape">Cross</span><span class="alg">F&#x27; r U R&#x27; U&#x27; r&#x27; F R</span></li>
+      <li><span class="num">26</span><span class="shape">Cross</span><span class="alg">R U2 R&#x27; U&#x27; R U&#x27; R&#x27;</span></li>
+      <li><span class="num">27</span><span class="shape">Cross</span><span class="alg">R U R&#x27; U R U2 R&#x27;</span></li>
+      <li><span class="num">28</span><span class="shape">Corners Oriented</span><span class="alg">r U R&#x27; U&#x27; r&#x27; R U R U&#x27; R&#x27;</span></li>
+      <li><span class="num">29</span><span class="shape">Awkward Shape</span><span class="alg">R U R&#x27; U&#x27; R U&#x27; R&#x27; F&#x27; U&#x27; F R U R&#x27;</span></li>
+      <li><span class="num">30</span><span class="shape">Awkward Shape</span><span class="alg">F R&#x27; F R2 U&#x27; R&#x27; U&#x27; R U R&#x27; F2</span></li>
+      <li><span class="num">31</span><span class="shape">P Shape</span><span class="alg">R&#x27; U&#x27; F U R U&#x27; R&#x27; F&#x27; R</span></li>
+      <li><span class="num">32</span><span class="shape">P Shape</span><span class="alg">L U F&#x27; U&#x27; L&#x27; U L F L&#x27;</span></li>
+      <li><span class="num">33</span><span class="shape">T Shape</span><span class="alg">R U R&#x27; U&#x27; R&#x27; F R F&#x27;</span></li>
+      <li><span class="num">34</span><span class="shape">C Shape</span><span class="alg">R U R2 U&#x27; R&#x27; F R U R U&#x27; F&#x27;</span></li>
+      <li><span class="num">35</span><span class="shape">Fish Shape</span><span class="alg">R U2 R2 F R F&#x27; R U2 R&#x27;</span></li>
+      <li><span class="num">36</span><span class="shape">W Shape</span><span class="alg">L&#x27; U&#x27; L U&#x27; L&#x27; U L U L F&#x27; L&#x27; F</span></li>
+      <li><span class="num">37</span><span class="shape">Fish Shape</span><span class="alg">F R&#x27; F&#x27; R U R U&#x27; R&#x27;</span></li>
+      <li><span class="num">38</span><span class="shape">W Shape</span><span class="alg">R U R&#x27; U R U&#x27; R&#x27; U&#x27; R&#x27; F R F&#x27;</span></li>
+      <li><span class="num">39</span><span class="shape">Big Lightning Bolt</span><span class="alg">L F&#x27; L&#x27; U&#x27; L U F U&#x27; L&#x27;</span></li>
+      <li><span class="num">40</span><span class="shape">Big Lightning Bolt</span><span class="alg">R&#x27; F R U R&#x27; U&#x27; F&#x27; U R</span></li>
+      <li><span class="num">41</span><span class="shape">Awkward Shape</span><span class="alg">R U R&#x27; U R U2 R&#x27; F R U R&#x27; U&#x27; F&#x27;</span></li>
+      <li><span class="num">42</span><span class="shape">Awkward Shape</span><span class="alg">R&#x27; U&#x27; R U&#x27; R&#x27; U2 R F R U R&#x27; U&#x27; F&#x27;</span></li>
+      <li><span class="num">43</span><span class="shape">P Shape</span><span class="alg">F&#x27; U&#x27; L&#x27; U L F</span></li>
+      <li><span class="num">44</span><span class="shape">P Shape</span><span class="alg">F U R U&#x27; R&#x27; F&#x27;</span></li>
+      <li><span class="num">45</span><span class="shape">T Shape</span><span class="alg">F R U R&#x27; U&#x27; F&#x27;</span></li>
+      <li><span class="num">46</span><span class="shape">C Shape</span><span class="alg">R&#x27; U&#x27; R&#x27; F R F&#x27; U R</span></li>
+      <li><span class="num">47</span><span class="shape">Small L Shape</span><span class="alg">R&#x27; U&#x27; R&#x27; F R F&#x27; R&#x27; F R F&#x27; U R</span></li>
+      <li><span class="num">48</span><span class="shape">Small L Shape</span><span class="alg">F R U R&#x27; U&#x27; R U R&#x27; U&#x27; F&#x27;</span></li>
+      <li><span class="num">49</span><span class="shape">Small L Shape</span><span class="alg">r U&#x27; r2 U r2 U r2 U&#x27; r</span></li>
+      <li><span class="num">50</span><span class="shape">Small L Shape</span><span class="alg">r&#x27; U r2 U&#x27; r2 U&#x27; r2 U r&#x27;</span></li>
+      <li><span class="num">51</span><span class="shape">I Shape</span><span class="alg">F U R U&#x27; R&#x27; U R U&#x27; R&#x27; F&#x27;</span></li>
+      <li><span class="num">52</span><span class="shape">I Shape</span><span class="alg">R U R&#x27; U R U&#x27; B U&#x27; B&#x27; R&#x27;</span></li>
+      <li><span class="num">53</span><span class="shape">Small L Shape</span><span class="alg">l&#x27; U2 L U L&#x27; U&#x27; L U L&#x27; U l</span></li>
+      <li><span class="num">54</span><span class="shape">Small L Shape</span><span class="alg">r U2 R&#x27; U&#x27; R U R&#x27; U&#x27; R U&#x27; r&#x27;</span></li>
+      <li><span class="num">55</span><span class="shape">I Shape</span><span class="alg">R&#x27; F R U R U&#x27; R2 F&#x27; R2 U&#x27; R&#x27; U R U R&#x27;</span></li>
+      <li><span class="num">56</span><span class="shape">I Shape</span><span class="alg">r&#x27; U&#x27; r U&#x27; R&#x27; U R U&#x27; R&#x27; U R r&#x27; U r</span></li>
+      <li><span class="num">57</span><span class="shape">Corners Oriented</span><span class="alg">R U R&#x27; U&#x27; M&#x27; U R U&#x27; r&#x27;</span></li>
+  </ul>
 </section>
 
 <!-- Trainer -->
@@ -123,13 +240,14 @@
 <section id="pll" hidden>
   <h1 id="pll-title">PLL Recognition</h1>
   <div id="pll-quiz">
+    <div class="row"><button id="pllEasy" class="active">Easy</button> <button id="pllHard">Hard</button></div>
     <div id="pll-prompt"></div>
     <input id="pll-answer" maxlength="12" autocomplete="off" autocapitalize="off" spellcheck="false">
     <div id="pll-feedback"></div>
     <div id="pll-score"></div>
     <div class="row"><button id="pll-next">Skip</button></div>
   </div>
-  <div id="pll-hint">Type J, A, or R then A or B · G then A to D · or T, F, V · Drag to turn the cube</div>
+  <div id="pll-hint">Type J, A, R, N, or U then A or B · G then A to D · or T, F, V, E, H, Z · Drag to turn the cube</div>
   <a id="pll-home" href="#home">Home</a>
 </section>
 
@@ -586,6 +704,7 @@
   function spin(rx, ry) {
     // PLL page turns only around the vertical axis (the orange, green, red, blue ring)
     if (pllView) {
+      if (pllHard && !location.hash.startsWith('#pllcase=')) return;   // hard mode applies to the PLL trainer only
       // Turn around the world vertical axis only; the tilt is always applied first
       pllYaw += ry;
       cube.rotation.set(PLL_TILT, pllYaw, 0);
@@ -661,6 +780,14 @@
 
   // Left and right arrow keys turn the cube on the trainer and PLL pages (same direction as dragging)
   window.addEventListener('keydown', e => {
+    // On the answer key viewer, the left and right arrows go to Back and Next
+    if (location.hash.startsWith('#pllcase=')) {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        stepPllCase(e.key === 'ArrowRight' ? 1 : -1);
+      }
+      return;
+    }
     if (!document.body.classList.contains('trainer') && !document.body.classList.contains('pll')) return;
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault();
@@ -690,9 +817,11 @@
   }
 
   const AXIS_VEC = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1)];
+  let moveLog = null, pllBuildMoves = [];   // turns applied while building a case
   // Turn the layer at coordinate `layer` along axis `ai` by `angle` radians
   function turnLayer(ai, layer, angle) {
     const layers = [].concat(layer);
+    if (moveLog) moveLog.push({ ai, layers, angle });
     const q = new THREE.Quaternion().setFromAxisAngle(AXIS_VEC[ai], angle);
     allPieces.forEach(p => {
       if (layers.some(l => Math.abs(p.position.getComponent(ai) - l) < 0.5)) {
@@ -704,13 +833,13 @@
   }
 
   // Face -> [axis, layer]. Clockwise as seen from the face is -90 degrees around its positive direction.
-  const FACE_TURN = { R: [0, 1], L: [0, -1], U: [1, 1], D: [1, -1], d: [1, -1], F: [2, 1], B: [2, -1] };
+  const FACE_TURN = { R: [0, 1], L: [0, -1], M: [0, -1], x: [0, 1], r: [0, 1], l: [0, -1], U: [1, 1], D: [1, -1], d: [1, -1], F: [2, 1], B: [2, -1] };
   function applyAlg(alg) {
     alg.split(' ').forEach(tok => {
       const [ai, layer] = FACE_TURN[tok[0]];
       const suffix = tok.slice(1);
       const turns = suffix === "'" ? -1 : suffix === '2' ? 2 : 1;
-      const layers = tok[0] === 'd' ? [-1, 0] : layer;   // d = D and the middle layer
+      const layers = tok[0] === 'd' ? [-1, 0] : tok[0] === 'M' ? [0] : layer;   // d = D and the middle layer; M = middle slice
       turnLayer(ai, layers, (-layer * Math.PI / 2) * turns);
     });
   }
@@ -719,22 +848,29 @@
   const PLL_ALGS = {
     J: "R U R' F' R U R' U' R' F R2 U' R' U'",
     T: "R U R' U' R' F R2 U' R' U' R U R' F'",
-    A: "L' U' L F L' U' L U L F' L2 U L U",
+    A: "x R2 F R F' R U2 r' U r U2",
     RA: "R U' R' U' R U R D R' U' R D' R' U2 R'",
     RB: "R' U2 R U2 R' F R U R' U' R' F' R2 U'",
     F: "R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R",
     V: "R' U R' d' R' F' R2 U' R' U R' F R F",
+    H: "M2 U M2 U2 M2 U M2",
+    UA: "M2 U M U2 M' U M2",
+    UB: "M2 U' M U2 M' U' M2",
+    Z: "M' U M2 U M2 U M' U2 M2",
     AA: "R' F R' B2 R F' R' B2 R2",
     AB: "R B' R F2 R' B R F2 R2",
     GA: "R2 U R' U R' U' R U' R2 U' D R' U R D'",
     GB: "R' U' R U D' R2 U R' U R U' R U' R2 D",
     GC: "R2 U' R U' R U R' U R2 U D' R U' R' D",
-    GD: "R U R' U' D R2 U' R U' R' U R' U R2 D'"
+    GD: "R U R' U' D R2 U' R U' R' U R' U R2 D'",
+    E: "R B' R' F R B R' F' R B R' F R B' R' F'",
+    NA: "R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'",
+    NB: "R' U R U' R' F' U' F R U R' F R' F' R U' R"
   };
   // Case names shown to the player
-  const PLL_LABEL = { J: 'Jb', T: 'T', A: 'Ja', RA: 'Ra', RB: 'Rb', F: 'F', V: 'V', AA: 'Ab', AB: 'Aa', GA: 'Gb', GB: 'Ga', GC: 'Gc', GD: 'Gd' };
+  const PLL_LABEL = { J: 'Jb', T: 'T', A: 'Ja', RA: 'Ra', RB: 'Rb', F: 'F', V: 'V', AA: 'Ab', AB: 'Aa', GA: 'Gb', GB: 'Ga', GC: 'Gd', GD: 'Gc', E: 'E', NA: 'Na', NB: 'Nb', H: 'H', UA: 'Ub', UB: 'Ua', Z: 'Z' };
   // What to type to answer each case (J and R are typed followed by A or B)
-  const PLL_ANSWER = { J: 'JB', A: 'JA', T: 'T', RA: 'RA', RB: 'RB', F: 'F', V: 'V', AA: 'AB', AB: 'AA', GA: 'GB', GB: 'GA', GC: 'GC', GD: 'GD' };
+  const PLL_ANSWER = { J: 'JB', A: 'JA', T: 'T', RA: 'RA', RB: 'RB', F: 'F', V: 'V', AA: 'AB', AB: 'AA', GA: 'GB', GB: 'GA', GC: 'GD', GD: 'GC', E: 'E', NA: 'NA', NB: 'NB', H: 'H', UA: 'UB', UB: 'UA', Z: 'Z' };
   const pllPrompt = $('pll-prompt'), pllAnswer = $('pll-answer'), pllFeedback = $('pll-feedback');
   const pllScore = $('pll-score'), pllNext = $('pll-next');
   let pllCase = null, pllLocked = true, pllCorrect = 0, pllTotal = 0;
@@ -836,10 +972,64 @@
     return (corner ? 20 : 0) + count + (count === 3 ? 10 : 0);
   }
 
+  // How many bottom-layer pieces have yellow facing down (all 8 when yellow is on the bottom)
+  function yellowBottomCount() {
+    let n = 0;
+    allPieces.forEach(p => {
+      if (p.position.y !== -1) return;
+      const local = new THREE.Vector3(0, -1, 0).applyQuaternion(p.quaternion.clone().invert());
+      if (p.userData.stickers[faceIndex(local)].material.color.getHex() === COLORS.down) n++;
+    });
+    return n;
+  }
+
+  // How many top-layer pieces have white facing up (white on top means all 8)
+  function whiteTopCount() {
+    let n = 0;
+    allPieces.forEach(p => {
+      if (p.position.y !== 1) return;
+      const local = new THREE.Vector3(0, 1, 0).applyQuaternion(p.quaternion.clone().invert());
+      if (p.userData.stickers[faceIndex(local)].material.color.getHex() === COLORS.up) n++;
+    });
+    return n;
+  }
+
+  // Turn an algorithm string into its list of moves, in the order written
+  function algMoves(alg) {
+    return alg.split(' ').map(tok => {
+      const [ai, layer] = FACE_TURN[tok[0]];
+      const suffix = tok.slice(1);
+      const turns = suffix === "'" ? -1 : suffix === '2' ? 2 : 1;
+      const layers = tok[0] === 'd' ? [-1, 0] : tok[0] === 'M' ? [0] : tok[0] === 'x' ? [-1, 0, 1] : tok[0] === 'r' ? [0, 1] : tok[0] === 'l' ? [-1, 0] : [layer];
+      return { ai, layers, angle: (-layer * Math.PI / 2) * turns };
+    });
+  }
+
   // Build a case on a solved cube: its algorithm, then the top-layer turn that puts the headlights on the right colors
   function buildPllCase(key) {
     resetCube();
-    applyAlg(PLL_ALGS[key]);
+    // The case is the inverse of the listed algorithm, so that algorithm solves it
+    moveLog = null;
+    algMoves(PLL_ALGS[key]).reverse().forEach(m => turnLayer(m.ai, m.layers, -m.angle));
+    moveLog = [];
+    // Turn the whole cube (around Z, then X) to the orientation with the most white on top
+    {
+      const savedLog = moveLog; moveLog = null;
+      let bestZ = 0, bestX = 0, bestWhite = -1;
+      for (let rz = 0; rz < 4; rz++) {
+        for (let rx = 0; rx < 4; rx++) {
+          const w = whiteTopCount();
+          if (w > bestWhite) { bestWhite = w; bestZ = rz; bestX = rx; }
+          turnLayer(0, [-1, 0, 1], -Math.PI / 2);
+        }
+        turnLayer(2, [-1, 0, 1], -Math.PI / 2);
+      }
+      moveLog = savedLog;
+      for (let i = 0; i < bestZ; i++) turnLayer(2, [-1, 0, 1], -Math.PI / 2);
+      for (let i = 0; i < bestX; i++) turnLayer(0, [-1, 0, 1], -Math.PI / 2);
+    }
+    // E is written after an x' cube rotation, so turn the whole cube until white is on top
+    const savedLog2 = moveLog; moveLog = null;
     let bestTurns = 0, bestScore = -1;
     for (let k = 0; k < 4; k++) {
       const useBlock = key === 'F' || key === 'J' || key === 'A';
@@ -849,14 +1039,17 @@
       turnLayer(1, 1, -Math.PI / 2);
     }
     // Four U turns bring the cube back to where it was; now apply the chosen number
+    moveLog = savedLog2;
     for (let i = 0; i < bestTurns; i++) turnLayer(1, 1, -Math.PI / 2);
     pllCase = key;
+    pllBuildMoves = moveLog || [];
+    moveLog = null;
   }
 
   function newPllCase() {
     pllTesting = false;
     // Pick a random case, but never the same one as the last question
-    const letters = ['J', 'T', 'A', 'RA', 'RB', 'F', 'V', 'AA', 'AB', 'GA', 'GB', 'GC', 'GD'].filter(l => l !== pllLast);
+    const letters = ['J', 'T', 'A', 'RA', 'RB', 'F', 'V', 'AA', 'AB', 'GA', 'GB', 'GC', 'GD', 'E', 'NA', 'NB', 'H', 'UA', 'UB', 'Z'].filter(l => l !== pllLast);
     pllLast = letters[Math.floor(Math.random() * letters.length)];
     buildPllCase(pllLast);
     pllLocked = false;
@@ -910,7 +1103,7 @@
       return;                                    // still typing the code
     }
     if (pllLocked) return;
-    if (raw === 'J' || raw === 'R' || raw === 'A' || raw === 'G') return;      // wait for the next letter (A or B)
+    if (raw === 'J' || raw === 'R' || raw === 'A' || raw === 'G' || raw === 'N' || raw === 'U') return;      // wait for the next letter (A or B)
     if ('TEST'.startsWith(raw)) {                // "T" might be the start of "test"
       pllTimer = setTimeout(() => judgePll(raw), 400);
       return;
@@ -931,22 +1124,132 @@
     setTimeout(() => { if (document.body.classList.contains('pll')) newPllCase(); }, 1200);
   };
 
+  // Easy: the cube can be turned. Hard: the cube stays in its starting view.
+  function setPllDifficulty(hard) {
+    pllHard = hard;
+    $('pllEasy').classList.toggle('active', !hard);
+    $('pllHard').classList.toggle('active', hard);
+    $('pll-hint').textContent = 'Type J, A, or R then A or B · G then A to D · or T, F, V' +
+      (hard ? ' · No turning in hard mode' : ' · Drag or use arrows to turn the cube');
+    resetPllView();
+  }
+  $('pllEasy').onclick = () => setPllDifficulty(false);
+  $('pllHard').onclick = () => setPllDifficulty(true);
+
+  // PLL answer key: one link per case, each opens that case in 3D
+  const pllKeyList = $('pllkey-list');
+  Object.keys(PLL_LABEL).forEach(key => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = `#pllcase=${key}`;
+    a.textContent = `${PLL_LABEL[key]} perm`;
+    li.appendChild(a);
+    const alg = document.createElement('span');
+    alg.className = 'pll-alg';
+    alg.textContent = PLL_ALGS[key];
+    li.appendChild(alg);
+    pllKeyList.appendChild(li);
+  });
+
+  // Next and Back move through the answer key, in the same order as the list
+  const pllKeys = Object.keys(PLL_LABEL);
+  function stepPllCase(dir) {
+    const cur = pllKeys.indexOf(location.hash.slice('#pllcase='.length));
+    const next = (cur + dir + pllKeys.length) % pllKeys.length;
+    location.hash = `#pllcase=${pllKeys[next]}`;
+  }
+  $('pllcase-prev').onclick = () => stepPllCase(-1);
+  $('pllcase-next').onclick = () => stepPllCase(1);
+
+  // Animate one layer turn smoothly, then update the cube's state
+  let activeTurn = null, solving = false, solveToken = 0;
+  function animateTurn(ai, layers, angle) {
+    return new Promise(resolve => {
+      const pieces = allPieces.filter(p => layers.some(l => Math.abs(p.position.getComponent(ai) - l) < 0.5));
+      const pivot = new THREE.Group();
+      cube.add(pivot);
+      pieces.forEach(p => pivot.attach(p));
+      const q0 = new THREE.Quaternion();
+      const q1 = new THREE.Quaternion().setFromAxisAngle(AXIS_VEC[ai], angle);
+      const start = performance.now(), dur = 350;
+      let done = false;
+      function finish() {
+        if (done) return;
+        done = true;
+        pivot.quaternion.copy(q1);
+        pieces.forEach(p => {
+          cube.attach(p);
+          p.position.set(Math.round(p.position.x), Math.round(p.position.y), Math.round(p.position.z));
+        });
+        cube.remove(pivot);
+        activeTurn = null;
+        resolve();
+      }
+      activeTurn = { cancel: finish };
+      function frame(now) {
+        if (done) return;
+        const t = Math.min(1, (now - start) / dur);
+        pivot.quaternion.copy(q0).slerp(q1, t);
+        if (t < 1) requestAnimationFrame(frame); else finish();
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  // Play the case's moves backwards, so the case unwinds to the solved cube
+  async function solvePllCase() {
+    if (solving) return;
+    solving = true;
+    const token = solveToken;
+    const undo = pllBuildMoves.slice().reverse().map(m => ({ ai: m.ai, layers: m.layers, angle: -m.angle }));
+    const moves = undo.concat(algMoves(PLL_ALGS[pllCase]));
+    for (const m of moves) {
+      if (token !== solveToken) break;
+      await animateTurn(m.ai, m.layers, m.angle);
+    }
+    if (token === solveToken) solving = false;
+  }
+  $('pllcase-solve').onclick = () => solvePllCase();
+
+  // Show one PLL case on the 3D cube, turned to the starting view
+  function showPllCase(key) {
+    if (!PLL_ALGS[key]) return;
+    if (activeTurn) activeTurn.cancel();
+    solveToken++;
+    solving = false;
+    $('pllcase-title').textContent = `${PLL_LABEL[key]} perm`;
+    $('pllcase-alg').textContent = PLL_ALGS[key];
+    cube.rotation.order = 'XYZ';
+    buildPllCase(key);
+    pllYaw = 0.3491;   // same starting view as the PLL trainer
+    cube.rotation.set(PLL_TILT, pllYaw, 0);
+    velX = 0;
+    velY = 0;
+  }
+
   // ---------- Switch between home, trainer and PLL using the URL hash ----------
   let pllView = false;   // true while the PLL page is showing
+  let pllHard = false;   // hard mode: the PLL cube cannot be turned
   let pllYaw = 0;        // how far the PLL cube has been turned around the vertical axis
   function showView() {
     const onTrainer = location.hash === '#trainer';
     const onPll = location.hash === '#pll';
-    const onCube = onTrainer || onPll;
+    const onPllCase = location.hash.startsWith('#pllcase=');
+    const onPllKey = location.hash === '#pllkey';
+    const onCube = onTrainer || onPll || onPllCase;
     const wasTrainer = document.body.classList.contains('trainer');
-    pllView = onPll;
+    pllView = onPll || onPllCase;
     document.body.classList.toggle('trainer', onTrainer);
     document.body.classList.toggle('pll', onPll);
-    $('home').hidden = onCube;
+    const onOll = location.hash === '#oll';
+    $('home').hidden = onCube || onOll || onPllKey;
+    $('pllkey').hidden = !onPllKey;
+    $('pllcase').hidden = !onPllCase;
+    $('oll').hidden = !onOll;
     $('trainer').hidden = !onTrainer;
     $('pll').hidden = !onPll;
     canvas.style.display = onCube ? 'block' : 'none';
-    setBody(onPll);
+    setBody(onPll || onPllCase);
     document.body.style.overflow = onCube ? 'hidden' : '';
     window.scrollTo(0, 0);
 
@@ -958,9 +1261,12 @@
     }
     clearHighlight();
     clearHover();
+    setLetters(false);   // remove answer-key letters when switching pages
     cube.rotation.order = 'XYZ';
 
-    if (onTrainer) {
+    if (onPllCase) {
+      showPllCase(location.hash.slice('#pllcase='.length));
+    } else if (onTrainer) {
       resetCube();
       startRun();
     } else if (onPll) {
@@ -972,6 +1278,7 @@
       velY = 0;
       pllCorrect = 0;
       pllTotal = 0;
+      setPllDifficulty(false);   // every visit starts on Easy
       newPllCase();
     } else {
       resetCube();
