@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rubik's Cube Training</title>
+<title>Ransh's Cube Training</title>
 <style>
   * { box-sizing: border-box; }
   html { background: #0b2545; }
@@ -28,8 +28,21 @@
   /* ---------- PLL answer key ---------- */
   #pllcase-title { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); margin: 0; z-index: 2;
                    font-size: 22px; font-weight: 600; color: #e8f1fb; white-space: nowrap; pointer-events: none; }
-  #pllcase-alg { position: absolute; top: 48px; left: 50%; transform: translateX(-50%); z-index: 2;
+  #pllcase-alg { position: absolute; top: 44px; left: 50%; transform: translateX(-50%); z-index: 2;
+                 display: flex; align-items: center; gap: 8px;
                  font-family: monospace; font-size: 15px; color: #cfe0f2; white-space: nowrap; pointer-events: none; }
+  #pllcase-edit { pointer-events: auto; background: #333a5c; color: #eee; border: 0; border-radius: 8px;
+                  width: 28px; height: 28px; font-size: 15px; line-height: 1; cursor: pointer; padding: 0; }
+  #pllcase-edit:hover, #pllcase-edit.open { background: #4f7cff; }
+  #pllcase-menu { position: absolute; top: 82px; left: 50%; transform: translateX(-50%); z-index: 3;
+                  width: min(calc(100vw - 24px), 520px); background: #1b3a5c; border-radius: 12px; padding: 8px;
+                  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); }
+  #pllcase-menu .alt-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #8fb3d9; padding: 4px 8px 8px; }
+  #pllcase-menu button { display: block; width: 100%; text-align: left; background: transparent; color: #e8f1fb; border: 0;
+                         border-radius: 8px; padding: 9px 10px; font-family: monospace; font-size: 14px; cursor: pointer; }
+  #pllcase-menu button:hover { background: #2a4d78; }
+  #pllcase-menu button.current { background: #4f7cff; color: #fff; }
+  #pllcase-menu .tag { font-family: sans-serif; font-size: 11px; opacity: 0.75; margin-left: 6px; }
   #pllcase-back { position: absolute; bottom: 12px; left: 12px; z-index: 2; background: #333a5c; color: #eee;
                   padding: 7px 12px; border-radius: 8px; font-size: 13px; text-decoration: none; }
   #pllkey-list { text-align: center; }
@@ -43,6 +56,11 @@
   #pllcase-next { right: 12px; }
   #pllcase-solve { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 2; background: #4f7cff; color: #fff;
                    border: 0; border-radius: 8px; padding: 8px 16px; font-size: 14px; cursor: pointer; }
+
+  #pllcase-speed { position: absolute; bottom: 12px; right: 12px; z-index: 2; display: flex; align-items: center; gap: 8px;
+                   color: #cfe0f2; font-size: 13px; }
+  #pllcase-speed input { width: 120px; accent-color: #4f7cff; }
+  #speed-label { min-width: 40px; text-align: right; }
 
   /* ---------- OLL list ---------- */
   #oll { max-width: 860px; margin: 0 auto; padding: 20px; }
@@ -101,24 +119,24 @@
   <main>
     <h2>Exercises</h2>
     <div class="grid">
-      <a class="tile" href="#trainer">
-        Blindfold Trainer
-        <small>Edges, corners, timed runs</small>
-      </a>
       <a class="tile" href="#pll">
         PLL Recognition
         <small>Jb, Ja, T, F, V, Ra, Rb, Aa, Ab, G, E, Na, Nb, H, Ua, Ub and Z perms</small>
-      </a>
-      <a class="tile" href="#oll">
-        OLL List
-        <small>All 57 cases</small>
       </a>
       <a class="tile" href="#pllkey">
         PLL Answer Key
         <small>Every case in 3D</small>
       </a>
+      <a class="tile" href="#oll">
+        OLL List
+        <small>All 57 cases</small>
+      </a>
       <div class="tile"></div>
       <div class="tile"></div>
+      <a class="tile" href="#trainer">
+        Blindfold Trainer
+        <small>Edges, corners, timed runs</small>
+      </a>
     </div>
   </main>
   <footer>Built by Ransh</footer>
@@ -134,11 +152,17 @@
 <!-- One PLL case shown in 3D -->
 <section id="pllcase" hidden>
   <h1 id="pllcase-title"></h1>
-  <div id="pllcase-alg"></div>
-  <a id="pllcase-back" href="#pllkey">Back to list</a>
+  <div id="pllcase-alg"><span id="pllcase-alg-text"></span><button id="pllcase-edit" title="Alternate algorithms" aria-label="Alternate algorithms">&#9998;</button></div>
+  <div id="pllcase-menu" hidden></div>
+  <a id="pllcase-back" href="#pllkey">Back to answer key</a>
   <button id="pllcase-prev" class="pllcase-step">Back</button>
   <button id="pllcase-next" class="pllcase-step">Next</button>
   <button id="pllcase-solve">Solve</button>
+  <div id="pllcase-speed">
+    <span>Speed</span>
+    <input id="speed-slider" type="range" min="0.25" max="3" step="0.05" value="1">
+    <span id="speed-label">1x</span>
+  </div>
 </section>
 
 <!-- OLL list -->
@@ -818,6 +842,7 @@
 
   const AXIS_VEC = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1)];
   let moveLog = null, pllBuildMoves = [];   // turns applied while building a case
+  let pllAuf = 0, pllSol = [];              // U turns at the end of the solution, and the full solution moves
   // Turn the layer at coordinate `layer` along axis `ai` by `angle` radians
   function turnLayer(ai, layer, angle) {
     const layers = [].concat(layer);
@@ -833,12 +858,12 @@
   }
 
   // Face -> [axis, layer]. Clockwise as seen from the face is -90 degrees around its positive direction.
-  const FACE_TURN = { R: [0, 1], L: [0, -1], M: [0, -1], x: [0, 1], r: [0, 1], l: [0, -1], U: [1, 1], D: [1, -1], d: [1, -1], F: [2, 1], B: [2, -1] };
+  const FACE_TURN = { R: [0, 1], L: [0, -1], M: [0, -1], x: [0, 1], y: [1, 1], z: [2, 1], r: [0, 1], l: [0, -1], U: [1, 1], u: [1, 1], D: [1, -1], d: [1, -1], F: [2, 1], B: [2, -1] };
   function applyAlg(alg) {
     alg.split(' ').forEach(tok => {
       const [ai, layer] = FACE_TURN[tok[0]];
       const suffix = tok.slice(1);
-      const turns = suffix === "'" ? -1 : suffix === '2' ? 2 : 1;
+      const turns = suffix === "'" ? -1 : suffix === '2' ? 2 : suffix === '3' ? 3 : 1;
       const layers = tok[0] === 'd' ? [-1, 0] : tok[0] === 'M' ? [0] : layer;   // d = D and the middle layer; M = middle slice
       turnLayer(ai, layers, (-layer * Math.PI / 2) * turns);
     });
@@ -852,25 +877,51 @@
     RA: "R U' R' U' R U R D R' U' R D' R' U2 R'",
     RB: "R' U2 R U2 R' F R U R' U' R' F' R2 U'",
     F: "R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R",
-    V: "R' U R' d' R' F' R2 U' R' U R' F R F",
+    V: "x' R' F R F' U R U2 R' U' R U' R' U2 R U R' U'",
     H: "M2 U M2 U2 M2 U M2",
     UA: "M2 U M U2 M' U M2",
     UB: "M2 U' M U2 M' U' M2",
     Z: "M' U M2 U M2 U M' U2 M2",
-    AA: "R' F R' B2 R F' R' B2 R2",
-    AB: "R B' R F2 R' B R F2 R2",
+    AA: "x' L2 D2 L U L' D2 L U' L",
+    AB: "x L2 D2 L' U' L D2 L' U L'",
     GA: "R2 U R' U R' U' R U' R2 U' D R' U R D'",
-    GB: "R' U' R U D' R2 U R' U R U' R U' R2 D",
+    GB: "F' U' F R2 u R' U R U' R u' R2",
     GC: "R2 U' R U' R U R' U R2 U D' R U' R' D",
     GD: "R U R' U' D R2 U' R U' R' U R' U R2 D'",
-    E: "R B' R' F R B R' F' R B R' F R B' R' F'",
+    E: "x' R U' R' D R U R' D' R U R' D R U' R' D'",
     NA: "R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'",
     NB: "R' U R U' R' F' U' F R U R' F R' F' R U' R"
   };
+  // Alternate algorithms for the answer key's case page, named for the case they belong to
+  const PLL_ALTS = {
+    T: ["R2 U R2 U' R2 U' D R2 U' R2 U R2 D'"],
+    A: ["y2 L' U' L F L' U' L U L F' L2 U L", "y' R' U L' U2 R U' R' U2 R L"],
+    RA: ["R U R' F' R U2 R' U2 R' F R U R U2 R'", "y' L U2 L' U2 L F' L' U' L U L F L2"],
+    RB: ["R' U2 R' D' R U' R' D R U R U' R' U' R", "R2 F R U R U' R' F' R U2 R' U2 R"],
+    F: ["F R' F R2 U' R' U' R U R' F' R U R' U' F'"],
+    V: ["R' U R' U' y R' F' R2 U' R' U R' F R F", "R' U R' U' R D' R' D R' U D' R2 U' R2 D R2", "D' R2 D R2 U R' D' R U' R U R' D R U'", "R U2 R' D R U' R U' R U R2 D R' U' R D2"],
+    AA: ["y' x' L' U L' D2 L U' L' D2 L2", "y x R' U R' D2 R U' R' D2 R2", "y2 x' R2 D2 R' U' R D2 R' U R'"],
+    AB: ["y x L U' L D2 L' U L D2 L2", "y2 x R2 D2 R U R' D2 R U' R", "y' x' R U' R D2 R' U R D2 R2"],
+    GA: ["R2 u R' U R' U' R u' R2 y' R' U R"],
+    GB: ["R' U' R U D' R2 U R' U R U' R U' R2 D"],
+    GC: ["y2 R2 F2 R U2 R U2 R' F R U R' U' R' F R2", "R2 u' R U' R U R' u R2 y R U' R'"],
+    GD: ["R U R' y' R2 u' R U' R' U R' u R2"],
+    E: ["x' L' U L D' L' U' L D L' U' L D' L' U L D"],
+    NA: ["z U R' D R2 U' R D' U R' D R2 U' R D'"],
+    NB: ["z D' R U' R2 D R' U D' R U' R2 D R' U"],
+    H: ["M2 U' M2 U2 M2 U' M2"],
+    UA: ["R U' R U R U R U' R' U' R2", "y2 R2 U' R' U' R U R U R U' R"],
+    UB: ["R2 U R U R' U' R' U' R' U R'", "y2 R' U R' U' R' U' R' U R U R2", "y2 R' U R' U' R3 U' R' U R U R2"],
+    Z: ["y M' U' M2 U' M2 U' M' U2 M2", "y M2 U M2 U M' U2 M2 U2 M'", "M2 U' M2 U' M' U2 M2 U2 M'"]
+  };
+  const pllAlgChoice = {};   // case -> alternate picked on the case page (kept for the session)
+  let algOverride = null;    // { key, alg } while the case page shows a picked alternate
+  const algFor = key => (algOverride && algOverride.key === key) ? algOverride.alg : PLL_ALGS[key];
+
   // Case names shown to the player
-  const PLL_LABEL = { J: 'Jb', T: 'T', A: 'Ja', RA: 'Ra', RB: 'Rb', F: 'F', V: 'V', AA: 'Ab', AB: 'Aa', GA: 'Gb', GB: 'Ga', GC: 'Gd', GD: 'Gc', E: 'E', NA: 'Na', NB: 'Nb', H: 'H', UA: 'Ub', UB: 'Ua', Z: 'Z' };
+  const PLL_LABEL = { J: 'Jb', T: 'T', A: 'Ja', RA: 'Ra', RB: 'Rb', F: 'F', V: 'V', AA: 'Ab', AB: 'Aa', GA: 'Ga', GB: 'Gb', GC: 'Gc', GD: 'Gd', E: 'E', NA: 'Na', NB: 'Nb', H: 'H', UA: 'Ua', UB: 'Ub', Z: 'Z' };
   // What to type to answer each case (J and R are typed followed by A or B)
-  const PLL_ANSWER = { J: 'JB', A: 'JA', T: 'T', RA: 'RA', RB: 'RB', F: 'F', V: 'V', AA: 'AB', AB: 'AA', GA: 'GB', GB: 'GA', GC: 'GD', GD: 'GC', E: 'E', NA: 'NA', NB: 'NB', H: 'H', UA: 'UB', UB: 'UA', Z: 'Z' };
+  const PLL_ANSWER = { J: 'JB', A: 'JA', T: 'T', RA: 'RA', RB: 'RB', F: 'F', V: 'V', AA: 'AB', AB: 'AA', GA: 'GA', GB: 'GB', GC: 'GC', GD: 'GD', E: 'E', NA: 'NA', NB: 'NB', H: 'H', UA: 'UA', UB: 'UB', Z: 'Z' };
   const pllPrompt = $('pll-prompt'), pllAnswer = $('pll-answer'), pllFeedback = $('pll-feedback');
   const pllScore = $('pll-score'), pllNext = $('pll-next');
   let pllCase = null, pllLocked = true, pllCorrect = 0, pllTotal = 0;
@@ -994,56 +1045,60 @@
     return n;
   }
 
-  // Turn an algorithm string into its list of moves, in the order written
+  // Turn an algorithm string into its list of moves, in the order written.
+  // R3 is three clockwise quarter turns, so each one is a separate move (and animates as one)
   function algMoves(alg) {
-    return alg.split(' ').map(tok => {
+    return alg.split(' ').flatMap(tok => {
       const [ai, layer] = FACE_TURN[tok[0]];
       const suffix = tok.slice(1);
+      const layers = tok[0] === 'd' ? [-1, 0] : tok[0] === 'M' ? [0] : (tok[0] === 'x' || tok[0] === 'y' || tok[0] === 'z') ? [-1, 0, 1] : tok[0] === 'r' || tok[0] === 'u' ? [0, 1] : tok[0] === 'l' ? [-1, 0] : [layer];
+      const quarter = -layer * Math.PI / 2;
+      if (suffix === '3') return [{ ai, layers, angle: quarter }, { ai, layers, angle: quarter }, { ai, layers, angle: quarter }];
       const turns = suffix === "'" ? -1 : suffix === '2' ? 2 : 1;
-      const layers = tok[0] === 'd' ? [-1, 0] : tok[0] === 'M' ? [0] : tok[0] === 'x' ? [-1, 0, 1] : tok[0] === 'r' ? [0, 1] : tok[0] === 'l' ? [-1, 0] : [layer];
-      return { ai, layers, angle: (-layer * Math.PI / 2) * turns };
+      return [{ ai, layers, angle: quarter * turns }];
     });
   }
 
-  // Build a case on a solved cube: its algorithm, then the top-layer turn that puts the headlights on the right colors
+  // The full move list that solves a case: the algorithm exactly as written, then the
+  // whole-cube rotations undone (so white is back on top), then k turns of U.
+  function pllSolution(key, k) {
+    const moves = algMoves(algFor(key));
+    const wholeCube = moves.filter(m => m.layers.length === 3);
+    wholeCube.slice().reverse().forEach(m => moves.push({ ai: m.ai, layers: m.layers, angle: -m.angle }));
+    if (k) moves.push({ ai: 1, layers: [1], angle: [0, -Math.PI / 2, -Math.PI, Math.PI / 2][k] });
+    return moves;
+  }
+  function pllSolutionText(key, k) {
+    const toks = algFor(key).split(' ');
+    const undo = toks.filter(t => /^[xyz]/.test(t)).reverse().map(t => {
+      if (t.endsWith("'")) return t.slice(0, -1);
+      if (t.endsWith('2')) return t;
+      return t + "'";
+    });
+    return [algFor(key), ...undo, ['', 'U', 'U2', "U'"][k]].filter(Boolean).join(' ');
+  }
+
+  // Build a case on a solved cube: the exact inverse of (algorithm, then k turns of U),
+  // so playing the algorithm and then those U turns solves it.
+  // k is chosen so the headlights / block show on the best side.
   function buildPllCase(key) {
-    resetCube();
-    // The case is the inverse of the listed algorithm, so that algorithm solves it
     moveLog = null;
-    algMoves(PLL_ALGS[key]).reverse().forEach(m => turnLayer(m.ai, m.layers, -m.angle));
-    moveLog = [];
-    // Turn the whole cube (around Z, then X) to the orientation with the most white on top
-    {
-      const savedLog = moveLog; moveLog = null;
-      let bestZ = 0, bestX = 0, bestWhite = -1;
-      for (let rz = 0; rz < 4; rz++) {
-        for (let rx = 0; rx < 4; rx++) {
-          const w = whiteTopCount();
-          if (w > bestWhite) { bestWhite = w; bestZ = rz; bestX = rx; }
-          turnLayer(0, [-1, 0, 1], -Math.PI / 2);
-        }
-        turnLayer(2, [-1, 0, 1], -Math.PI / 2);
-      }
-      moveLog = savedLog;
-      for (let i = 0; i < bestZ; i++) turnLayer(2, [-1, 0, 1], -Math.PI / 2);
-      for (let i = 0; i < bestX; i++) turnLayer(0, [-1, 0, 1], -Math.PI / 2);
-    }
-    // E is written after an x' cube rotation, so turn the whole cube until white is on top
-    const savedLog2 = moveLog; moveLog = null;
-    let bestTurns = 0, bestScore = -1;
+    const useBlock = key === 'F' || key === 'J' || key === 'A';
+    const scorer = key === 'V' ? vBlockScore : useBlock ? blockScore : ['RB', 'H', 'UA', 'UB', 'Z'].includes(key) ? rbScore : headlightScore;   // these are shown with the corners lined up
+    const scramble = k => {
+      resetCube();
+      pllSolution(key, k).slice().reverse().forEach(m => turnLayer(m.ai, m.layers, -m.angle));
+    };
+    let bestK = 0, bestScore = -1;
     for (let k = 0; k < 4; k++) {
-      const useBlock = key === 'F' || key === 'J' || key === 'A';
-      const scorer = key === 'V' ? vBlockScore : useBlock ? blockScore : key === 'RB' ? rbScore : headlightScore;
+      scramble(k);
       const sc = scorer();
-      if (sc > bestScore) { bestScore = sc; bestTurns = k; }
-      turnLayer(1, 1, -Math.PI / 2);
+      if (sc > bestScore) { bestScore = sc; bestK = k; }
     }
-    // Four U turns bring the cube back to where it was; now apply the chosen number
-    moveLog = savedLog2;
-    for (let i = 0; i < bestTurns; i++) turnLayer(1, 1, -Math.PI / 2);
+    scramble(bestK);
     pllCase = key;
-    pllBuildMoves = moveLog || [];
-    moveLog = null;
+    pllAuf = bestK;
+    pllSol = pllSolution(key, bestK);
   }
 
   function newPllCase() {
@@ -1161,55 +1216,127 @@
   $('pllcase-prev').onclick = () => stepPllCase(-1);
   $('pllcase-next').onclick = () => stepPllCase(1);
 
+  // Animation speed multiplier from the slider (0.25x to 3x); read at the start of every turn
+  let animSpeed = 1;
+  $('speed-slider').addEventListener('input', e => {
+    animSpeed = parseFloat(e.target.value);
+    $('speed-label').textContent = `${parseFloat(animSpeed.toFixed(2))}x`;
+  });
+
   // Animate one layer turn smoothly, then update the cube's state
   let activeTurn = null, solving = false, solveToken = 0;
-  function animateTurn(ai, layers, angle) {
+  // Animate one or more layer turns at the same time (each part: { ai, layers, angle })
+  function animateTurns(parts) {
     return new Promise(resolve => {
-      const pieces = allPieces.filter(p => layers.some(l => Math.abs(p.position.getComponent(ai) - l) < 0.5));
-      const pivot = new THREE.Group();
-      cube.add(pivot);
-      pieces.forEach(p => pivot.attach(p));
+      const items = parts.map(p => {
+        const pieces = allPieces.filter(pc => p.layers.some(l => Math.abs(pc.position.getComponent(p.ai) - l) < 0.5));
+        const pivot = new THREE.Group();
+        cube.add(pivot);
+        pieces.forEach(pc => pivot.attach(pc));
+        return { pieces, pivot, q1: new THREE.Quaternion().setFromAxisAngle(AXIS_VEC[p.ai], p.angle) };
+      });
       const q0 = new THREE.Quaternion();
-      const q1 = new THREE.Quaternion().setFromAxisAngle(AXIS_VEC[ai], angle);
-      const start = performance.now(), dur = 350;
+      const dur = 350;
+      let progress = 0, last = performance.now();
       let done = false;
       function finish() {
         if (done) return;
         done = true;
-        pivot.quaternion.copy(q1);
-        pieces.forEach(p => {
-          cube.attach(p);
-          p.position.set(Math.round(p.position.x), Math.round(p.position.y), Math.round(p.position.z));
+        items.forEach(it => {
+          it.pivot.quaternion.copy(it.q1);
+          it.pieces.forEach(pc => {
+            cube.attach(pc);
+            pc.position.set(Math.round(pc.position.x), Math.round(pc.position.y), Math.round(pc.position.z));
+          });
+          cube.remove(it.pivot);
         });
-        cube.remove(pivot);
         activeTurn = null;
         resolve();
       }
       activeTurn = { cancel: finish };
       function frame(now) {
         if (done) return;
-        const t = Math.min(1, (now - start) / dur);
-        pivot.quaternion.copy(q0).slerp(q1, t);
-        if (t < 1) requestAnimationFrame(frame); else finish();
+        // Progress advances by the current slider speed every frame, so dragging the slider
+        // changes the speed of the turn that is already in motion
+        progress = Math.min(1, progress + (now - last) / dur * animSpeed);
+        last = now;
+        items.forEach(it => it.pivot.quaternion.copy(q0).slerp(it.q1, progress));
+        if (progress < 1) requestAnimationFrame(frame); else finish();
       }
       requestAnimationFrame(frame);
     });
   }
 
-  // Play the case's moves backwards, so the case unwinds to the solved cube
+  // Play the algorithm as written (plus the final U turns) to solve the case
+  let caseSolved = false;   // true once Solve has finished, so the next click goes back to the unsolved case
   async function solvePllCase() {
     if (solving) return;
+    if (caseSolved) {
+      buildPllCase(pllCase);   // back to the starting (unsolved) case, same view
+      caseSolved = false;
+      return;
+    }
     solving = true;
     const token = solveToken;
-    const undo = pllBuildMoves.slice().reverse().map(m => ({ ai: m.ai, layers: m.layers, angle: -m.angle }));
-    const moves = undo.concat(algMoves(PLL_ALGS[pllCase]));
-    for (const m of moves) {
+    const moves = pllSol.slice();
+    for (let i = 0; i < moves.length; i++) {
       if (token !== solveToken) break;
-      await animateTurn(m.ai, m.layers, m.angle);
+      const m = moves[i], n = moves[i + 1];
+      // A U turn right next to a D turn (like U' D) is played as one move, both layers at once
+      const pair = n && m.ai === 1 && n.ai === 1 && !m.layers.some(l => n.layers.includes(l));
+      if (pair) {
+        await animateTurns([m, n]);
+        i++;
+      } else {
+        await animateTurns([m]);
+      }
     }
-    if (token === solveToken) solving = false;
+    if (token === solveToken) { solving = false; caseSolved = true; }
   }
   $('pllcase-solve').onclick = () => solvePllCase();
+
+  // Pencil menu: pick one of the alternate algorithms for this case
+  function closeAltMenu() {
+    $('pllcase-menu').hidden = true;
+    $('pllcase-edit').classList.remove('open');
+  }
+  $('pllcase-edit').addEventListener('click', e => {
+    e.stopPropagation();
+    const menu = $('pllcase-menu');
+    if (!menu.hidden) { closeAltMenu(); return; }
+    const key = location.hash.slice('#pllcase='.length);
+    if (!PLL_ALTS[key]) return;
+    const chosen = pllAlgChoice[key] || PLL_ALGS[key];
+    menu.innerHTML = '';
+    const title = document.createElement('div');
+    title.className = 'alt-title';
+    title.textContent = 'Algorithms';
+    menu.appendChild(title);
+    [PLL_ALGS[key], ...PLL_ALTS[key]].forEach((alg, i) => {
+      const b = document.createElement('button');
+      b.textContent = alg;
+      if (i === 0) {
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = 'default';
+        b.appendChild(tag);
+      }
+      if (alg === chosen) b.classList.add('current');
+      b.onclick = () => {
+        if (i === 0) delete pllAlgChoice[key]; else pllAlgChoice[key] = alg;
+        showPllCase(key);
+      };
+      menu.appendChild(b);
+    });
+    menu.hidden = false;
+    $('pllcase-edit').classList.add('open');
+  });
+  document.addEventListener('click', e => {
+    if (!$('pllcase-menu').hidden && !$('pllcase-menu').contains(e.target)) closeAltMenu();
+  });
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !$('pllcase-menu').hidden) closeAltMenu();
+  });
 
   // Show one PLL case on the 3D cube, turned to the starting view
   function showPllCase(key) {
@@ -1217,10 +1344,15 @@
     if (activeTurn) activeTurn.cancel();
     solveToken++;
     solving = false;
+    caseSolved = false;
     $('pllcase-title').textContent = `${PLL_LABEL[key]} perm`;
-    $('pllcase-alg').textContent = PLL_ALGS[key];
+    algOverride = pllAlgChoice[key] ? { key, alg: pllAlgChoice[key] } : null;
+    $('pllcase-menu').hidden = true;
+    $('pllcase-edit').classList.remove('open');
+    $('pllcase-edit').hidden = !PLL_ALTS[key];
     cube.rotation.order = 'XYZ';
     buildPllCase(key);
+    $('pllcase-alg-text').textContent = pllSolutionText(key, pllAuf);
     pllYaw = 0.3491;   // same starting view as the PLL trainer
     cube.rotation.set(PLL_TILT, pllYaw, 0);
     velX = 0;
@@ -1259,6 +1391,7 @@
       clearInterval(clockId); clockId = null;
       clearTimeout(pendingId); pendingId = null;
     }
+    if (!onPllCase) { algOverride = null; closeAltMenu(); }
     clearHighlight();
     clearHover();
     setLetters(false);   // remove answer-key letters when switching pages
