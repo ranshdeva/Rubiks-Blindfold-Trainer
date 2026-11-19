@@ -45,6 +45,33 @@
   #pllcase-menu .tag { font-family: sans-serif; font-size: 11px; opacity: 0.75; margin-left: 6px; }
   #pllcase-back { position: absolute; bottom: 12px; left: 12px; z-index: 2; background: #333a5c; color: #eee;
                   padding: 7px 12px; border-radius: 8px; font-size: 13px; text-decoration: none; }
+  #learn-title { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); margin: 0; z-index: 2;
+                 font-size: 22px; font-weight: 600; color: #e8f1fb; white-space: nowrap; pointer-events: none; }
+  #learn-count { position: absolute; top: 44px; left: 50%; transform: translateX(-50%); z-index: 2;
+                 color: #cfe0f2; font-size: 14px; white-space: nowrap; pointer-events: none; }
+  #learn-home { position: absolute; bottom: 12px; left: 12px; z-index: 2; background: #333a5c; color: #eee;
+                padding: 7px 12px; border-radius: 8px; font-size: 13px; text-decoration: none; }
+  #learn-prev { left: 12px; }
+  #learn-next { right: 12px; }
+  .learn-steps { list-style: none; padding: 0; margin: 0; text-align: center; }
+  .learn-steps li { padding: 14px 0; font-size: 20px; border-bottom: 1px solid #1b3a5c; }
+  .learn-steps a { color: #e8f1fb; text-decoration: underline; }
+  .learn-steps span { color: #8fb3d9; }
+  #cross-title { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); margin: 0; z-index: 2;
+                 font-size: 22px; font-weight: 600; color: #e8f1fb; white-space: nowrap; pointer-events: none; }
+  #cross-panel { position: absolute; top: 56px; left: 12px; width: min(calc(100vw - 24px), 340px); z-index: 2;
+                 background: transparent; padding: 8px; text-align: center; }
+  #cross-panel button { background: #333a5c; color: #eee; border: 0; border-radius: 8px; padding: 8px 12px; margin: 2px; font-size: 14px; cursor: pointer; }
+  #cross-panel button:hover { background: #4f7cff; }
+  #cross-panel button:disabled { opacity: 0.4; cursor: default; }
+  #cross-panel button:disabled:hover { background: #333a5c; }
+  #cross-input { width: 100%; font-size: 15px; padding: 8px; border-radius: 6px; border: 0; background: #222; color: #fff; }
+  #cross-speed { width: 130px; accent-color: #4f7cff; vertical-align: middle; }
+  #cross-panel span { font-size: 13px; color: #cfe0f2; }
+  #cross-status { margin-top: 8px; font-size: 14px; color: #cfe0f2; min-height: 18px; }
+  #cross-scramble { margin-top: 6px; font-family: monospace; font-size: 14px; color: #cfe0f2; word-break: break-word; }
+  #cross-back { position: absolute; bottom: 12px; left: 12px; z-index: 2; background: #333a5c; color: #eee;
+                padding: 7px 12px; border-radius: 8px; font-size: 13px; text-decoration: none; }
   #pllkey-list { text-align: center; }
   #pllkey-list li { justify-content: center; flex-direction: column; align-items: center; gap: 4px; }
   #pllkey-list .pll-alg { font-family: monospace; font-size: 14px; color: #cfe0f2; }
@@ -55,7 +82,7 @@
   #pllcase-prev { left: 12px; }
   #pllcase-next { right: 12px; }
   #pllcase-solve { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 2; background: #4f7cff; color: #fff;
-                   border: 0; border-radius: 8px; padding: 8px 16px; font-size: 14px; cursor: pointer; }
+                   border: 0; border-radius: 8px; padding: 14px 26px; font-size: 18px; cursor: pointer; }
 
   #pllcase-speed { position: absolute; bottom: 12px; right: 12px; z-index: 2; display: flex; align-items: center; gap: 8px;
                    color: #cfe0f2; font-size: 13px; }
@@ -131,7 +158,9 @@
         OLL List
         <small>All 57 cases</small>
       </a>
-      <div class="tile"></div>
+      <a class="tile" href="#learn">
+        Learn How to Solve a Rubik's Cube
+      </a>
       <div class="tile"></div>
       <a class="tile" href="#trainer">
         Blindfold Trainer
@@ -140,6 +169,49 @@
     </div>
   </main>
   <footer>Built by Ransh</footer>
+</section>
+
+<!-- Learn how to solve -->
+<section id="learn" hidden>
+  <h1 class="page-title">Learn How to Solve a Rubik's Cube</h1>
+  <a class="back-link" href="#home">Home</a>
+  <ul class="learn-steps">
+    <li><a href="#learncrossmenu">1. White cross</a></li>
+    <li><span>2. First layer</span></li>
+    <li><span>3. Second layer</span></li>
+    <li><span>4. OLL</span></li>
+    <li><span>5. PLL</span></li>
+  </ul>
+</section>
+
+<section id="learncrossmenu" hidden>
+  <h1 class="page-title">White Cross</h1>
+  <a class="back-link" href="#learn">Back to steps</a>
+  <ul class="learn-steps">
+    <li><a href="#learncross">Examples of solved white cross</a></li>
+    <li><a href="#crosssolver">White cross solver</a></li>
+  </ul>
+</section>
+
+<section id="crosssolver" hidden>
+  <h1 id="cross-title">White Cross Solver</h1>
+  <div id="cross-panel">
+    <input id="cross-input" placeholder="Scramble, e.g. R U R' U'" autocomplete="off" spellcheck="false">
+    <div class="row"><button id="cross-apply">Use scramble</button> <button id="cross-random">Random scramble</button></div>
+    <div class="row"><span>Speed</span> <input id="cross-speed" type="range" min="0.25" max="3" step="0.05" value="1"> <span id="cross-speed-label">1x</span></div>
+    <div class="row"><button id="cross-solve">Solve white cross</button> <button id="cross-again" disabled>Play again</button> <button id="cross-pause" disabled>Pause</button></div>
+    <div id="cross-status"></div>
+    <div id="cross-scramble"></div>
+  </div>
+  <a id="cross-back" href="#learncrossmenu">Back to options</a>
+</section>
+
+<section id="learncross" hidden>
+  <h1 id="learn-title">White Cross</h1>
+  <div id="learn-count"></div>
+  <a id="learn-home" href="#learncrossmenu">Back to options</a>
+  <button id="learn-prev" class="pllcase-step">Back</button>
+  <button id="learn-next" class="pllcase-step">Next</button>
 </section>
 
 <!-- PLL answer key -->
@@ -157,7 +229,7 @@
   <a id="pllcase-back" href="#pllkey">Back to answer key</a>
   <button id="pllcase-prev" class="pllcase-step">Back</button>
   <button id="pllcase-next" class="pllcase-step">Next</button>
-  <button id="pllcase-solve">Solve</button>
+  <button id="pllcase-solve">Show animation</button>
   <div id="pllcase-speed">
     <span>Speed</span>
     <input id="speed-slider" type="range" min="0.25" max="3" step="0.05" value="1">
@@ -490,7 +562,7 @@
   function nextQuestion() {
     clearHighlight();
     // Return the cube to its original position for every question
-    cube.quaternion.setFromEuler(new THREE.Euler(0.4014, 0, 0));
+    setFreeView(0.4014, 0);
     velX = 0;
     velY = 0;
 
@@ -725,17 +797,26 @@
   const canvas = renderer.domElement;
   const AXES = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0)];
   const PLL_TILT = 0.2443;   // fixed 14 degree tilt on the PLL page, so white stays on top
+  let freeTilt = 0.4014, freeYaw = 0;   // free turning: tilt (X) and yaw (Y) only, never roll
+  function setFreeView(tilt, yaw) {
+    freeTilt = tilt;
+    freeYaw = yaw;
+    cube.rotation.order = 'XYZ';
+    cube.rotation.set(tilt, yaw, 0);
+  }
   function spin(rx, ry) {
     // PLL page turns only around the vertical axis (the orange, green, red, blue ring)
     if (pllView) {
-      if (pllHard && !location.hash.startsWith('#pllcase=')) return;   // hard mode applies to the PLL trainer only
+      if (pllHard && location.hash === '#pll') return;   // hard mode applies to the PLL trainer only
       // Turn around the world vertical axis only; the tilt is always applied first
       pllYaw += ry;
       cube.rotation.set(PLL_TILT, pllYaw, 0);
       return;
     }
-    cube.rotateOnWorldAxis(AXES[0], rx);
-    cube.rotateOnWorldAxis(AXES[1], ry);
+    freeTilt += rx;
+    freeYaw += ry;
+    cube.rotation.order = 'XYZ';
+    cube.rotation.set(freeTilt, freeYaw, 0);
   }
 
   let dragging = false, lastX = 0, lastY = 0, velX = 0, velY = 0;
@@ -804,6 +885,13 @@
 
   // Left and right arrow keys turn the cube on the trainer and PLL pages (same direction as dragging)
   window.addEventListener('keydown', e => {
+    if (location.hash === '#learncross') {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        showLearnExample(learnIndex + (e.key === 'ArrowRight' ? 1 : -1));
+      }
+      return;
+    }
     // On the answer key viewer, the left and right arrows go to Back and Next
     if (location.hash.startsWith('#pllcase=')) {
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
@@ -868,6 +956,379 @@
       turnLayer(ai, layers, (-layer * Math.PI / 2) * turns);
     });
   }
+
+  // ---------- Learn: examples with the white cross already solved ----------
+  // Only the bottom (D) and middle (E) layers are turned, so the top cross stays solved
+  const LEARN_MOVES = [
+    { ai: 1, layers: [-1], angle: Math.PI / 2 },    // D
+    { ai: 1, layers: [-1], angle: -Math.PI / 2 },   // D'
+    { ai: 1, layers: [-1], angle: Math.PI },        // D2
+    { ai: 1, layers: [0], angle: Math.PI / 2 },     // E
+    { ai: 1, layers: [0], angle: -Math.PI / 2 },    // E'
+    { ai: 1, layers: [0], angle: Math.PI }          // E2
+  ];
+  const learnExamples = [];   // filled with your scrambles below
+  // Scramble notation: lowercase letters are single-layer turns of that face, and ’ is a prime
+  function scrambleMoves(str) {
+    return str.replace(/’/g, "'").split(' ').filter(Boolean).flatMap(tok => {
+      const face = tok[0].toUpperCase();
+      const [ai, layer] = FACE_TURN[face];
+      const suffix = tok.slice(1);
+      const quarter = -layer * Math.PI / 2;
+      const layers = [layer];
+      if (suffix === '3') return [{ ai, layers, angle: quarter }, { ai, layers, angle: quarter }, { ai, layers, angle: quarter }];
+      const turns = suffix === "'" ? -1 : suffix === '2' ? 2 : 1;
+      return [{ ai, layers, angle: quarter * turns }];
+    });
+  }
+  learnExamples.push(scrambleMoves("U' R' F' B R' F2 D' B U' L' D2 B2 L B2 L U2 L2 D2 L' D2 l f d’ l2 u’ b’ u"));
+  learnExamples.push(scrambleMoves("R2 D' B2 L2 F2 D2 R2 D B2 U' F2 B R' D2 F R B D2 R2 U' F F R’ L2 B U R’"));
+  learnExamples.push(scrambleMoves("B2 R2 F R F2 U' R' F' U2 B' D2 F' D2 R2 B' L2 B L2 F D' L’ R B U2 L’ U’ F U F2"));
+
+  let learnIndex = 0;
+  function showLearnExample(i) {
+    learnIndex = (i + learnExamples.length) % learnExamples.length;
+    moveLog = null;
+    resetCube();
+    learnExamples[learnIndex].forEach(m => turnLayer(m.ai, m.layers, m.angle));
+    setFreeView(0.4014, 0);   // white on top, free to turn
+    velX = 0;
+    velY = 0;
+    $('learn-count').textContent = `Example ${learnIndex + 1} of ${learnExamples.length}`;
+  }
+  $('learn-prev').onclick = () => showLearnExample(learnIndex - 1);
+  $('learn-next').onclick = () => showLearnExample(learnIndex + 1);
+
+  // ---------- White cross solver ----------
+  // The four white edges on top, each matching the color of its side
+  const CROSS_SIDES = [[0, 1, COLORS.front], [1, 0, COLORS.right], [0, -1, COLORS.back], [-1, 0, COLORS.left]];
+  const CROSS_MOVES = [];
+  [['U', 1, [1]], ['D', 1, [-1]], ['L', 0, [-1]], ['R', 0, [1]], ['F', 2, [1]], ['B', 2, [-1]]].forEach(([name, ai, layers]) => {
+    const quarter = -layers[0] * Math.PI / 2;
+    CROSS_MOVES.push({ name, face: name, ai, layers, angle: quarter });
+    CROSS_MOVES.push({ name: name + "'", face: name, ai, layers, angle: -quarter });
+    CROSS_MOVES.push({ name: name + '2', face: name, ai, layers, angle: 2 * quarter });
+  });
+
+  // d is the double bottom layer turn (D and the middle layer together), turning the same way as D
+  CROSS_MOVES.push({ name: 'd', face: 'd', ai: 1, layers: [-1, 0], angle: Math.PI / 2 });
+  CROSS_MOVES.push({ name: "d'", face: 'd', ai: 1, layers: [-1, 0], angle: -Math.PI / 2 });
+  CROSS_MOVES.push({ name: 'd2', face: 'd', ai: 1, layers: [-1, 0], angle: Math.PI });
+
+  // d turns the same bottom layers as D, so the search treats them as one family of moves
+  const fam = f => (f === 'd' ? 'D' : f);
+
+  // The color showing in direction dir on a piece
+  function tileColor(piece, dir) {
+    const local = new THREE.Vector3(dir[0], dir[1], dir[2]).applyQuaternion(piece.quaternion.clone().invert());
+    return piece.userData.stickers[faceIndex(local)].material.color.getHex();
+  }
+
+  // How many of the four white cross edges are solved
+  function crossCount() {
+    let n = 0;
+    CROSS_SIDES.forEach(([x, z, color]) => {
+      const piece = findPiece(new THREE.Vector3(x, 1, z));
+      if (tileColor(piece, [0, 1, 0]) === COLORS.up && tileColor(piece, [x, 0, z]) === color) n++;
+    });
+    return n;
+  }
+
+  // Moves applied during a search, so they can be undone at any time
+  let crossStack = [];
+  function crossApply(i) {
+    const m = CROSS_MOVES[i];
+    turnLayer(m.ai, m.layers, m.angle);
+    crossStack.push(i);
+  }
+  function crossUndo() {
+    const m = CROSS_MOVES[crossStack.pop()];
+    turnLayer(m.ai, m.layers, -m.angle);
+  }
+  function crossUndoAll() {
+    while (crossStack.length) crossUndo();
+  }
+
+  let crossToken = 0, crossBusy = false;
+  let searchPaused = false;    // true while the search for a solution is paused
+  let lastCrossPath = null;    // the solution of the last finished solve, for Play again
+
+  // Pause or resume the search for a solution (the animation of the finished solution is not affected)
+  function setCrossPaused(paused) {
+    searchPaused = paused;
+    $('cross-pause').textContent = paused ? 'Resume' : 'Pause';
+  }
+  $('cross-pause').onclick = () => {
+    setCrossPaused(!searchPaused);
+    setCrossStatus(searchPaused ? 'Search paused.' : 'Searching for a solution...');
+  };
+
+  // Give the page a moment to draw, and wait here for as long as the search is paused
+  async function searchYield(token) {
+    await new Promise(r => setTimeout(r, 0));
+    while (searchPaused && token === crossToken) await new Promise(r => setTimeout(r, 50));
+  }
+
+  async function playCrossPath(path, token) {
+    for (const i of path) {
+      if (token !== crossToken) return;
+      await animateTurns([CROSS_MOVES[i]]);
+    }
+  }
+  function clearCrossSolution() {
+    lastCrossPath = null;
+    $('cross-again').disabled = true;
+  }
+  function setCrossStatus(text) { $('cross-status').textContent = text; }
+  // "Solution: 9 moves: R U ..." with the moves written on the same line
+  const solutionStatus = path => `Solution: ${path.length} moves: ${path.map(i => CROSS_MOVES[i].name).join(' ')}`;
+
+  // Faces that cancel or commute: opposite faces turn independently, so only one order is searched
+  const OPPOSITE_FACE = { U: 'D', D: 'U', L: 'R', R: 'L', F: 'B', B: 'F' };
+  const FACE_ORDER = { U: 0, D: 1, L: 2, R: 3, F: 4, B: 5 };
+
+  // Depth-limited search over the single-layer moves. It yields to the browser every so often,
+  // so the page keeps responding (and the cube can be turned) while it searches.
+  // It stops early if the token changes, which happens when the page is left or a new search starts.
+  async function searchCross(maxDepth, nodeCap, token) {
+    let nodes = 0;
+    async function dfs(depth, lastFace) {
+      if (crossCount() === 4) return true;
+      if (depth === 0 || nodes >= nodeCap) return false;
+      for (let i = 0; i < CROSS_MOVES.length; i++) {
+        const m = CROSS_MOVES[i];
+        // No repeating a face (R' then R, or R then R2), and no out-of-order opposite faces
+        const mf = fam(m.face), lf = lastFace && fam(lastFace);
+        if (mf === lf) continue;
+        if (lf && OPPOSITE_FACE[lf] === mf && FACE_ORDER[mf] < FACE_ORDER[lf]) continue;
+        nodes++;
+        if (nodes % 1500 === 0) {
+          await searchYield(token);
+          if (token !== crossToken) return false;
+        }
+        crossApply(i);
+        if (await dfs(depth - 1, m.face)) return true;
+        if (token !== crossToken) return false;
+        crossUndo();
+        if (nodes >= nodeCap) return false;
+      }
+      return false;
+    }
+    for (let d = 1; d <= maxDepth; d++) {
+      if (token === crossToken) setCrossStatus(`Searching for a solution... depth ${d}`);
+      if (await dfs(d, null)) return true;
+      if (token !== crossToken || nodes >= nodeCap) break;
+    }
+    return false;
+  }
+
+  // Is one white cross edge solved?
+  function sideSolved(i) {
+    const [x, z, color] = CROSS_SIDES[i];
+    const piece = findPiece(new THREE.Vector3(x, 1, z));
+    return tileColor(piece, [0, 1, 0]) === COLORS.up && tileColor(piece, [x, 0, z]) === color;
+  }
+
+  // A move would disturb a solved edge if one of its layers contains that edge's position
+  function movesLocked(m, lockedSides) {
+    return lockedSides.some(i => {
+      const pos = new THREE.Vector3(CROSS_SIDES[i][0], 1, CROSS_SIDES[i][1]);
+      return m.layers.some(l => Math.abs(pos.getComponent(m.ai) - l) < 0.5);
+    });
+  }
+
+  // Search for moves that solve one edge, using only moves that keep the solved edges in place
+  async function searchEdge(target, lockedSides, maxDepth, token) {
+    let nodes = 0;
+    async function dfs(depth, lastFace) {
+      if (sideSolved(target)) return true;
+      if (depth === 0) return false;
+      for (let i = 0; i < CROSS_MOVES.length; i++) {
+        const m = CROSS_MOVES[i];
+        const mf = fam(m.face), lf = lastFace && fam(lastFace);
+        if (mf === lf) continue;
+        if (lf && OPPOSITE_FACE[lf] === mf && FACE_ORDER[mf] < FACE_ORDER[lf]) continue;
+        if (movesLocked(m, lockedSides)) continue;
+        nodes++;
+        if (nodes % 1500 === 0) {
+          await searchYield(token);
+          if (token !== crossToken) return false;
+        }
+        crossApply(i);
+        if (await dfs(depth - 1, m.face)) return true;
+        if (token !== crossToken) return false;
+        crossUndo();
+      }
+      return false;
+    }
+    for (let d = 1; d <= maxDepth; d++) {
+      if (token === crossToken) setCrossStatus(`Solving edge ${target + 1} of 4... depth ${d}`);
+      if (await dfs(d, null)) return true;
+      if (token !== crossToken) return false;
+    }
+    return false;
+  }
+
+  // Solve the four edges one at a time. Each step keeps every edge already solved in place.
+  async function searchCrossStaged(token) {
+    // Every step solves one more edge and keeps the solved ones, so four steps are enough.
+    // The cap is only a safety net so the page can never get stuck in a loop.
+    for (let step = 0; step < 8; step++) {
+      if (token !== crossToken) return false;
+      const unsolved = [0, 1, 2, 3].filter(i => !sideSolved(i));
+      if (unsolved.length === 0) return true;
+      const locked = [0, 1, 2, 3].filter(i => sideSolved(i));
+      if (!(await searchEdge(unsolved[0], locked, 12, token))) return false;
+      await searchYield(token);   // let the page breathe between steps (and wait here if paused)
+    }
+    return [0, 1, 2, 3].every(i => sideSolved(i));
+  }
+
+  function showCrossSolver() {
+    clearCrossSolution();
+    resetCube();
+    moveLog = null;
+    setFreeView(PLL_TILT, 0.3491);   // starting view: tilted 14 degrees, turned 20 degrees to the right
+    velX = 0;
+    velY = 0;
+    $('cross-scramble').textContent = '';
+    setCrossStatus('Enter a scramble, or use a random one.');
+  }
+
+  $('cross-apply').onclick = () => {
+    if (crossBusy) return;
+    let moves;
+    try {
+      moves = scrambleMoves($('cross-input').value);
+    } catch (err) {
+      setCrossStatus('Could not read that scramble.');
+      return;
+    }
+    crossToken++;
+    clearCrossSolution();
+    resetCube();
+    moveLog = null;
+    moves.forEach(m => turnLayer(m.ai, m.layers, m.angle));
+    $('cross-scramble').textContent = `Scramble: ${$('cross-input').value.trim()}`;
+    setCrossStatus('Scramble applied.');
+  };
+
+  $('cross-random').onclick = () => {
+    if (crossBusy) return;
+    crossToken++;
+    clearCrossSolution();
+    resetCube();
+    moveLog = null;
+    let prev = null;
+    const names = [];
+    for (let i = 0; i < 20; i++) {
+      let m;
+      // Random scrambles use only the outer layers (no double bottom layer d turns)
+      do { m = CROSS_MOVES[Math.floor(Math.random() * CROSS_MOVES.length)]; } while (m.face === prev || m.face === 'd');
+      prev = m.face;
+      names.push(m.name);
+      turnLayer(m.ai, m.layers, m.angle);
+    }
+    // Show the scramble that was used, and put it in the box so it can be reused
+    const scramble = names.join(' ');
+    $('cross-input').value = scramble;
+    $('cross-scramble').textContent = `Scramble: ${scramble}`;
+    setCrossStatus('Random scramble applied.');
+  };
+
+  // Replace every d move with a U move. Turning the bottom two layers (d) is the same as turning the top
+  // layer the other way and then turning the whole cube, so every move after a d is turned to match
+  // (R becomes F, F becomes L, and so on). The solution ends with the U that lines the cross up with the
+  // centers. Returns move indexes into CROSS_MOVES.
+  function dToU(path) {
+    const NEXT = { R: 'F', F: 'L', L: 'B', B: 'R', U: 'U', D: 'D' };
+    const out = [];
+    let j = 0;   // how far the cube has been turned by the d moves, in quarter turns
+    const add = (face, k) => {
+      const last = out[out.length - 1];
+      if (last && last.face === face) {
+        k = (last.k + k) % 4;
+        out.pop();
+        if (k === 0) return;
+      }
+      out.push({ face, k });
+    };
+    path.forEach(i => {
+      const name = CROSS_MOVES[i].name;
+      if (name[0] === 'd') {
+        const q = { d: 1, "d'": -1, d2: 2 }[name];
+        j += q;
+        add('U', ((q % 4) + 4) % 4);
+      } else {
+        let face = name[0];
+        for (let n = 0; n < ((j % 4) + 4) % 4; n++) face = NEXT[face];
+        add(face, name.endsWith("'") ? 3 : name.endsWith('2') ? 2 : 1);
+      }
+    });
+    const t = ((j % 4) + 4) % 4;
+    if (t) add('U', 4 - t);
+    return out.map(st => CROSS_MOVES.findIndex(m => m.name === st.face + (st.k === 1 ? '' : st.k === 2 ? '2' : "'")));
+  }
+
+  $('cross-solve').onclick = async () => {
+    if (crossBusy) return;
+    if (crossCount() === 4) { setCrossStatus('The white cross is already solved.'); return; }
+    crossBusy = true;
+    const token = ++crossToken;
+    setCrossStatus('Searching for a solution...');
+    $('cross-pause').disabled = false;
+    moveLog = null;
+    crossStack = [];
+    const found = await searchCrossStaged(token);
+    if (token !== crossToken) return;   // the page was left or another action started; state was already restored
+    $('cross-pause').disabled = true;
+    setCrossPaused(false);
+    if (!found) {
+      crossUndoAll();
+      crossBusy = false;
+      setCrossStatus('No solution found. Try another scramble.');
+      return;
+    }
+    // Remember the solution, then undo it so the animation starts from the scramble
+    let path = crossStack.slice();
+    crossUndoAll();
+    if (path.some(i => CROSS_MOVES[i].name[0] === 'd')) {
+      // Write the solution with U moves instead of d moves, and check that it really solves the cross
+      const converted = dToU(path);
+      converted.forEach(i => crossApply(i));
+      const aligned = crossCount() === 4;
+      crossUndoAll();
+      if (aligned) {
+        path = converted;
+      } else {
+        // Safety net: keep the d moves, and finish with a U move that lines the cross up with the centers
+        const moveIndex = name => CROSS_MOVES.findIndex(m => m.name === name);
+        const net = path.reduce((sum, i) => sum + ({ d: 1, "d'": -1, d2: 2 }[CROSS_MOVES[i].name] || 0), 0);
+        const turns = ((net % 4) + 4) % 4;
+        if (turns) path.push(moveIndex(turns === 1 ? "U'" : turns === 2 ? 'U2' : 'U'));
+      }
+    }
+    setCrossStatus(solutionStatus(path));
+    lastCrossPath = path;
+    await playCrossPath(path, token);
+    crossBusy = false;
+    if (token === crossToken) $('cross-again').disabled = false;
+  };
+
+  // Play again: step back from the solved cube to the scramble, then play the solution again
+  $('cross-again').onclick = async () => {
+    if (crossBusy || !lastCrossPath) return;
+    crossBusy = true;
+    const token = ++crossToken;
+    moveLog = null;
+    for (let k = lastCrossPath.length - 1; k >= 0; k--) {
+      const m = CROSS_MOVES[lastCrossPath[k]];
+      turnLayer(m.ai, m.layers, -m.angle);
+    }
+    setCrossStatus(solutionStatus(lastCrossPath));
+    await playCrossPath(lastCrossPath, token);
+    if (token === crossToken) crossBusy = false;
+  };
 
   // ---------- PLL recognition ----------
   const PLL_ALGS = {
@@ -1218,10 +1679,16 @@
 
   // Animation speed multiplier from the slider (0.25x to 3x); read at the start of every turn
   let animSpeed = 1;
-  $('speed-slider').addEventListener('input', e => {
-    animSpeed = parseFloat(e.target.value);
-    $('speed-label').textContent = `${parseFloat(animSpeed.toFixed(2))}x`;
-  });
+  function setAnimSpeed(value) {
+    animSpeed = value;
+    const label = `${parseFloat(animSpeed.toFixed(2))}x`;
+    $('speed-slider').value = animSpeed;
+    $('speed-label').textContent = label;
+    $('cross-speed').value = animSpeed;
+    $('cross-speed-label').textContent = label;
+  }
+  $('speed-slider').addEventListener('input', e => setAnimSpeed(parseFloat(e.target.value)));
+  $('cross-speed').addEventListener('input', e => setAnimSpeed(parseFloat(e.target.value)));
 
   // Animate one layer turn smoothly, then update the cube's state
   let activeTurn = null, solving = false, solveToken = 0;
@@ -1368,20 +1835,28 @@
     const onPll = location.hash === '#pll';
     const onPllCase = location.hash.startsWith('#pllcase=');
     const onPllKey = location.hash === '#pllkey';
-    const onCube = onTrainer || onPll || onPllCase;
+    const onLearn = location.hash === '#learn';
+    const onLearnCross = location.hash === '#learncross';
+    const onLearnCrossMenu = location.hash === '#learncrossmenu';
+    const onCrossSolver = location.hash === '#crosssolver';
+    const onCube = onTrainer || onPll || onPllCase || onLearnCross || onCrossSolver;
     const wasTrainer = document.body.classList.contains('trainer');
     pllView = onPll || onPllCase;
     document.body.classList.toggle('trainer', onTrainer);
     document.body.classList.toggle('pll', onPll);
     const onOll = location.hash === '#oll';
-    $('home').hidden = onCube || onOll || onPllKey;
+    $('home').hidden = onCube || onOll || onPllKey || onLearn || onLearnCrossMenu;
+    $('learncrossmenu').hidden = !onLearnCrossMenu;
+    $('crosssolver').hidden = !onCrossSolver;
+    $('learn').hidden = !onLearn;
+    $('learncross').hidden = !onLearnCross;
     $('pllkey').hidden = !onPllKey;
     $('pllcase').hidden = !onPllCase;
     $('oll').hidden = !onOll;
     $('trainer').hidden = !onTrainer;
     $('pll').hidden = !onPll;
     canvas.style.display = onCube ? 'block' : 'none';
-    setBody(onPll || onPllCase);
+    setBody(onPll || onPllCase || onLearnCross || onCrossSolver);
     document.body.style.overflow = onCube ? 'hidden' : '';
     window.scrollTo(0, 0);
 
@@ -1392,6 +1867,12 @@
       clearTimeout(pendingId); pendingId = null;
     }
     if (!onPllCase) { algOverride = null; closeAltMenu(); }
+    if (activeTurn) activeTurn.cancel();
+    // Never leave an animation paused when moving to another page
+    setCrossPaused(false);
+    $('cross-pause').disabled = true;
+    if (crossBusy) { crossUndoAll(); crossBusy = false; }
+    crossToken++;
     clearHighlight();
     clearHover();
     setLetters(false);   // remove answer-key letters when switching pages
@@ -1413,6 +1894,10 @@
       pllTotal = 0;
       setPllDifficulty(false);   // every visit starts on Easy
       newPllCase();
+    } else if (onLearnCross) {
+      showLearnExample(learnIndex);
+    } else if (onCrossSolver) {
+      showCrossSolver();
     } else {
       resetCube();
     }
