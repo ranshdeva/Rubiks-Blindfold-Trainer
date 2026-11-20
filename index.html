@@ -72,6 +72,14 @@
   #cross-scramble { margin-top: 6px; font-family: monospace; font-size: 14px; color: #cfe0f2; word-break: break-word; }
   #cross-back { position: absolute; bottom: 12px; left: 12px; z-index: 2; background: #333a5c; color: #eee;
                 padding: 7px 12px; border-radius: 8px; font-size: 13px; text-decoration: none; }
+  #timeline-wrap { position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%); z-index: 2;
+                   width: min(calc(100vw - 24px), 620px); }
+  #timeline { width: 100%; accent-color: #4f7cff; }
+  #timeline-marks { position: relative; height: 26px; margin-top: 4px; }
+  #timeline-marks button { position: absolute; top: 0; transform: translateX(-50%); background: #333a5c; color: #eee;
+                           border: 0; border-radius: 6px; padding: 3px 6px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+  #timeline-marks button:hover { background: #4f7cff; }
+  #timeline-now { text-align: center; font-size: 12px; color: #cfe0f2; margin-top: 2px; }
   #pllkey-list { text-align: center; }
   #pllkey-list li { justify-content: center; flex-direction: column; align-items: center; gap: 4px; }
   #pllkey-list .pll-alg { font-family: monospace; font-size: 14px; color: #cfe0f2; }
@@ -87,6 +95,23 @@
   #pllcase-speed { position: absolute; bottom: 12px; right: 12px; z-index: 2; display: flex; align-items: center; gap: 8px;
                    color: #cfe0f2; font-size: 13px; }
   #pllcase-speed input { width: 120px; accent-color: #4f7cff; }
+  #oll-list li { cursor: pointer; }
+  #oll-list li:hover { background: #1b3a5c; }
+  #oll-list li:focus { outline: 2px solid #4f7cff; outline-offset: 2px; }
+  #ollcase-title { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); margin: 0; z-index: 2;
+                   font-size: 22px; font-weight: 600; color: #e8f1fb; white-space: nowrap; pointer-events: none; }
+  #ollcase-alg { position: absolute; top: 44px; left: 50%; transform: translateX(-50%); z-index: 2;
+                 font-family: monospace; font-size: 15px; color: #cfe0f2; white-space: nowrap; pointer-events: none; }
+  #ollcase-back { position: absolute; bottom: 12px; left: 12px; z-index: 2; background: #333a5c; color: #eee;
+                  padding: 7px 12px; border-radius: 8px; font-size: 13px; text-decoration: none; }
+  #ollcase-prev, #ollcase-next { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; background: #333a5c; color: #eee;
+                                 border: 0; border-radius: 8px; padding: 10px 14px; font-size: 15px; cursor: pointer; }
+  #ollcase-prev { left: 12px; } #ollcase-next { right: 12px; }
+  #ollcase-solve { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 2; background: #4f7cff; color: #fff;
+                   border: 0; border-radius: 8px; padding: 14px 26px; font-size: 18px; cursor: pointer; }
+  #ollcase-speed { position: absolute; bottom: 12px; right: 12px; z-index: 2; display: flex; align-items: center; gap: 8px;
+                   color: #cfe0f2; font-size: 13px; }
+  #ollcase-speed input { width: 120px; accent-color: #4f7cff; }
   #speed-label { min-width: 40px; text-align: right; }
 
   /* ---------- OLL list ---------- */
@@ -161,7 +186,10 @@
       <a class="tile" href="#learn">
         Learn How to Solve a Rubik's Cube
       </a>
-      <div class="tile"></div>
+      <a class="tile" href="#crosssolver">
+        Cube Solver
+        <small>Cross, first layer, second layer, OLL and PLL</small>
+      </a>
       <a class="tile" href="#trainer">
         Blindfold Trainer
         <small>Edges, corners, timed runs</small>
@@ -189,21 +217,25 @@
   <a class="back-link" href="#learn">Back to steps</a>
   <ul class="learn-steps">
     <li><a href="#learncross">Examples of solved white cross</a></li>
-    <li><a href="#crosssolver">White cross solver</a></li>
   </ul>
 </section>
 
 <section id="crosssolver" hidden>
-  <h1 id="cross-title">White Cross Solver</h1>
+  <h1 id="cross-title">Cube Solver</h1>
   <div id="cross-panel">
     <input id="cross-input" placeholder="Scramble, e.g. R U R' U'" autocomplete="off" spellcheck="false">
     <div class="row"><button id="cross-apply">Use scramble</button> <button id="cross-random">Random scramble</button></div>
     <div class="row"><span>Speed</span> <input id="cross-speed" type="range" min="0.25" max="3" step="0.05" value="1"> <span id="cross-speed-label">1x</span></div>
-    <div class="row"><button id="cross-solve">Solve white cross</button> <button id="cross-again" disabled>Play again</button> <button id="cross-pause" disabled>Pause</button></div>
+    <div class="row"><button id="cross-solve">Solve cube</button> <button id="cross-again" disabled>Play again</button> <button id="cross-pause" disabled>Pause</button></div>
     <div id="cross-status"></div>
     <div id="cross-scramble"></div>
   </div>
-  <a id="cross-back" href="#learncrossmenu">Back to options</a>
+  <div id="timeline-wrap">
+    <input id="timeline" type="range" min="0" max="0" value="0">
+    <div id="timeline-marks"></div>
+    <div id="timeline-now"></div>
+  </div>
+  <a id="cross-back" href="#home">Back to home</a>
 </section>
 
 <section id="learncross" hidden>
@@ -300,6 +332,21 @@
       <li><span class="num">56</span><span class="shape">I Shape</span><span class="alg">r&#x27; U&#x27; r U&#x27; R&#x27; U R U&#x27; R&#x27; U R r&#x27; U r</span></li>
       <li><span class="num">57</span><span class="shape">Corners Oriented</span><span class="alg">R U R&#x27; U&#x27; M&#x27; U R U&#x27; r&#x27;</span></li>
   </ul>
+</section>
+
+<!-- One OLL case shown and animated in 3D -->
+<section id="ollcase" hidden>
+  <h1 id="ollcase-title"></h1>
+  <div id="ollcase-alg"></div>
+  <a id="ollcase-back" href="#oll">Back to OLL list</a>
+  <button id="ollcase-prev">Back</button>
+  <button id="ollcase-next">Next</button>
+  <button id="ollcase-solve">Show animation</button>
+  <div id="ollcase-speed">
+    <span>Speed</span>
+    <input id="oll-speed-slider" type="range" min="0.25" max="3" step="0.05" value="1">
+    <span id="oll-speed-label">1x</span>
+  </div>
 </section>
 
 <!-- Trainer -->
@@ -797,12 +844,13 @@
   const canvas = renderer.domElement;
   const AXES = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0)];
   const PLL_TILT = 0.2443;   // fixed 14 degree tilt on the PLL page, so white stays on top
-  let freeTilt = 0.4014, freeYaw = 0;   // free turning: tilt (X) and yaw (Y) only, never roll
-  function setFreeView(tilt, yaw) {
+  let freeTilt = 0.4014, freeYaw = 0, freeRoll = 0;   // free turning: tilt (X) and yaw (Y); roll only for a flipped view
+  function setFreeView(tilt, yaw, roll = 0) {
     freeTilt = tilt;
     freeYaw = yaw;
+    freeRoll = roll;
     cube.rotation.order = 'XYZ';
-    cube.rotation.set(tilt, yaw, 0);
+    cube.rotation.set(tilt, yaw, roll);
   }
   function spin(rx, ry) {
     // PLL page turns only around the vertical axis (the orange, green, red, blue ring)
@@ -814,9 +862,9 @@
       return;
     }
     freeTilt += rx;
-    freeYaw += ry;
+    freeYaw += ry * (Math.cos(freeTilt) < 0 ? -1 : 1);   // upside down: reverse the turn so it matches the screen
     cube.rotation.order = 'XYZ';
-    cube.rotation.set(freeTilt, freeYaw, 0);
+    cube.rotation.set(freeTilt, freeYaw, freeRoll);
   }
 
   let dragging = false, lastX = 0, lastY = 0, velX = 0, velY = 0;
@@ -893,6 +941,14 @@
       return;
     }
     // On the answer key viewer, the left and right arrows go to Back and Next
+    if (location.hash.startsWith('#ollcase=')) {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        const n = parseInt(location.hash.slice('#ollcase='.length), 10);
+        location.hash = `#ollcase=${n + (e.key === 'ArrowRight' ? 1 : -1) < 1 ? 57 : n + (e.key === 'ArrowRight' ? 1 : -1) > 57 ? 1 : n + (e.key === 'ArrowRight' ? 1 : -1)}`;
+      }
+      return;
+    }
     if (location.hash.startsWith('#pllcase=')) {
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault();
@@ -1045,11 +1101,26 @@
     const m = CROSS_MOVES[crossStack.pop()];
     turnLayer(m.ai, m.layers, -m.angle);
   }
+  // Animated version of apply and undo, used by the first layer search when animateSearch is on
+  async function crossStepAnimated(i, undo) {
+    const m = CROSS_MOVES[i];
+    setCrossStatus(`Trying: ${crossStack.map(j => CROSS_MOVES[j].name).join(' ') || '(start)'}${undo ? ' (backing up)' : ''}`);
+    if (undo) {
+      crossStack.pop();
+      await animateTurns([{ ai: m.ai, layers: m.layers, angle: -m.angle }]);
+    } else {
+      crossStack.push(i);
+      await animateTurns([m]);
+    }
+  }
   function crossUndoAll() {
     while (crossStack.length) crossUndo();
   }
 
   let crossToken = 0, crossBusy = false;
+  let noMiddleLayer = false;   // first layer corner searches must not use middle layer (E) turns
+  let animateSearch = false;   // test: play every move the first layer search tries, and its undo
+  let noUpperLayer = false;    // first layer search must not turn the white (U) layer
   let searchPaused = false;    // true while the search for a solution is paused
   let lastCrossPath = null;    // the solution of the last finished solve, for Play again
 
@@ -1090,13 +1161,15 @@
   // Depth-limited search over the single-layer moves. It yields to the browser every so often,
   // so the page keeps responding (and the cube can be turned) while it searches.
   // It stops early if the token changes, which happens when the page is left or a new search starts.
-  async function searchCross(maxDepth, nodeCap, token) {
+  async function searchCross(maxDepth, nodeCap, token, goal = () => crossCount() === 4) {
     let nodes = 0;
     async function dfs(depth, lastFace) {
-      if (crossCount() === 4) return true;
+      if (goal()) return true;
       if (depth === 0 || nodes >= nodeCap) return false;
       for (let i = 0; i < CROSS_MOVES.length; i++) {
         const m = CROSS_MOVES[i];
+        if (noMiddleLayer && m.face === 'd') continue;
+        if (noUpperLayer && m.face === 'U') continue;
         // No repeating a face (R' then R, or R then R2), and no out-of-order opposite faces
         const mf = fam(m.face), lf = lastFace && fam(lastFace);
         if (mf === lf) continue;
@@ -1106,10 +1179,10 @@
           await searchYield(token);
           if (token !== crossToken) return false;
         }
-        crossApply(i);
+        if (animateSearch) await crossStepAnimated(i, false); else crossApply(i);
         if (await dfs(depth - 1, m.face)) return true;
         if (token !== crossToken) return false;
-        crossUndo();
+        if (animateSearch) await crossStepAnimated(i, true); else crossUndo();
         if (nodes >= nodeCap) return false;
       }
       return false;
@@ -1270,11 +1343,453 @@
     return out.map(st => CROSS_MOVES.findIndex(m => m.name === st.face + (st.k === 1 ? '' : st.k === 2 ? '2' : "'")));
   }
 
+  // ---------- First layer (after the white cross) ----------
+  // Each corner: turn the top layer until the corner is above its spot, then repeat the sexy move
+  // (R U R' U' on the right side, L' U' L U on the left) until it is solved. A corner on the bottom
+  // is first brought up with R' D' R D (or L D L' D').
+  const FIRST_SLOTS = [[1, 1, COLORS.right, COLORS.front], [-1, 1, COLORS.left, COLORS.front],
+                       [-1, -1, COLORS.left, COLORS.back], [1, -1, COLORS.right, COLORS.back]];
+  const sameColors = (p, want) => {
+    const got = Object.values(p.userData.stickers).map(st => st.material.color.getHex()).sort().join();
+    return got === want.slice().sort().join();
+  };
+  // Are all four top corners in their spots, with the right colors?
+  function firstLayerSolved() {
+    return FIRST_SLOTS.every(([sx, sz, cx, cz]) => {
+      const p = findPiece(new THREE.Vector3(sx, 1, sz));
+      return tileColor(p, [0, 1, 0]) === COLORS.up && tileColor(p, [sx, 0, 0]) === cx && tileColor(p, [0, 0, sz]) === cz;
+    });
+  }
+
+  // Write a move as seen from yellow on top and green in front: U and D swap, R and L swap, F and B stay
+  function yellowViewName(name) {
+    const swap = { U: 'D', D: 'U', R: 'L', L: 'R' };
+    return (swap[name[0]] || name[0]) + name.slice(1);
+  }
+
+  // Is one top corner in its spot (with the right colors)?
+  const slotOk = (sx, sz, cx, cz) => {
+    const p = findPiece(new THREE.Vector3(sx, 1, sz));
+    return tileColor(p, [0, 1, 0]) === COLORS.up && tileColor(p, [sx, 0, 0]) === cx && tileColor(p, [0, 0, sz]) === cz;
+  };
+
+  // First layer, the usual way: a white corner in the yellow layer is turned (yellow face turns) until it sits
+  // directly under its spot, then the sexy move is repeated until it is solved. The sexy move is tried in the
+  // four mirror forms and the one that solves the corner (without breaking the corners already placed) is used.
+  const SEXY_CANDIDATES = ["R' D' R D", "R D R' D'", "L D L' D'", "L' D' L D"];
+  async function runFirstLayer(token) {
+    const log = [];
+    const marks = [];   // which corner is being solved, and from which move on
+    moveLog = log;
+    const applyAlgSim = alg => algMoves(alg).forEach(m => turnLayer(m.ai, m.layers, m.angle));
+    const snap = () => allPieces.map(p => [p.position.clone(), p.quaternion.clone()]);
+    const restore = st => allPieces.forEach((p, i) => { p.position.copy(st[i][0]); p.quaternion.copy(st[i][1]); });
+    const cornerNow = want => allPieces.find(p =>
+      Math.abs(p.position.x) === 1 && Math.abs(p.position.y) === 1 && Math.abs(p.position.z) === 1 && sameColors(p, want));
+    const yellowView = alg => alg.split(' ').map(yellowViewName).join(' ');
+    let ok = true;
+    for (let k = 0; k < FIRST_SLOTS.length && ok; k++) {
+      if (token !== crossToken) return;
+      const [sx, sz, cx, cz] = FIRST_SLOTS[k];
+      const want = [COLORS.up, cx, cz];
+      const earlierOk = () => FIRST_SLOTS.slice(0, k).every(([x, z, a, b]) => slotOk(x, z, a, b));
+      const slotNow = () => slotOk(sx, sz, cx, cz);
+      if (slotNow()) continue;
+      let c = cornerNow(want);
+      marks.push({ at: log.length, piece: c });
+      if (c.position.y === 1) {
+        // The corner is in the white layer but not solved: first move it down into the yellow layer
+        const before2 = snap();
+        moveLog = null;
+        let found = null;
+        for (let a = 0; a < 4 && !found; a++) {
+          for (const alg of SEXY_CANDIDATES) {
+            restore(before2);
+            for (let t = 0; t < a; t++) turnLayer(1, [1], -Math.PI / 2);
+            for (let r = 1; r <= 6 && !found; r++) {
+              applyAlgSim(alg);
+              if (cornerNow(want).position.y === -1 && earlierOk()) found = { a, alg, r };
+            }
+            if (found) break;
+          }
+        }
+        restore(before2);
+        moveLog = log;
+        if (!found) {
+          ok = false;
+          setCrossStatus(`Corner ${k + 1}: could not move it down out of the white layer.`);
+          break;
+        }
+        for (let t = 0; t < found.a; t++) turnLayer(1, [1], -Math.PI / 2);
+        for (let r = 0; r < found.r; r++) applyAlgSim(found.alg);
+        setCrossStatus(`Corner ${k + 1}: moved down with ${yellowView(found.alg)} x${found.r}`);
+        c = cornerNow(want);
+      }
+      if (c.position.y !== -1) {
+        ok = false;
+        setCrossStatus(`Corner ${k + 1}: it is not in the yellow layer, so it can't be inserted this way.`);
+        break;
+      }
+      // Pick the cheapest way: yellow face turns in either direction, then a sexy form repeated.
+      // Cost = yellow turns + (repeats x length of the sexy form), so the shorter side wins.
+      const before = snap();
+      const atSpot = () => { const cc = cornerNow(want); return cc.position.x === sx && cc.position.z === sz; };
+      let best = null;
+      moveLog = null;
+      for (const dir of [1, -1]) {
+        restore(before);
+        let n = 0;
+        while (n < 4 && !atSpot()) {
+          turnLayer(1, [-1], dir * Math.PI / 2);
+          n++;
+        }
+        if (!atSpot()) continue;
+        const aligned = snap();
+        for (const alg of SEXY_CANDIDATES) {
+          restore(aligned);
+          for (let r = 1; r <= 6; r++) {
+            applyAlgSim(alg);
+            if (slotNow()) {
+              if (earlierOk()) {
+                const cost = n + r * algMoves(alg).length;
+                if (!best || cost < best.cost) best = { dir, n, alg, r, cost };
+              }
+              break;
+            }
+          }
+        }
+      }
+      restore(before);
+      moveLog = log;
+      if (!best) {
+        ok = false;
+        setCrossStatus(`Corner ${k + 1}: no way to solve it without breaking the others.`);
+        break;
+      }
+      for (let t = 0; t < best.n; t++) turnLayer(1, [-1], best.dir * Math.PI / 2);
+      for (let r = 0; r < best.r; r++) applyAlgSim(best.alg);
+      setCrossStatus(`Corner ${k + 1}: ${best.n} yellow turn(s), then ${yellowView(best.alg)} x${best.r}`);
+    }
+    moveLog = null;
+    if (token !== crossToken) return;
+    const done = ok && firstLayerSolved();
+    // Undo the moves, then play them on screen from the cross position
+    for (let i = log.length - 1; i >= 0; i--) turnLayer(log[i].ai, log[i].layers, -log[i].angle);
+    if (!done) {
+      setCrossStatus(ok ? 'The first layer is not solved yet.' : 'The first layer could not be finished.');
+      return;
+    }
+    setCrossStatus(`First layer: ${log.length} turns, playing them now.`);
+    // A light glow on the three tiles of the corner being solved (emissive, so the colors stay the same)
+    const glow = (piece, on) => Object.values(piece.userData.stickers).forEach(st =>
+      st.material.emissive.setHex(on ? 0x555555 : 0x000000));
+    let markIdx = 0, glowing = null;
+    for (let i = 0; i < log.length; i++) {
+      while (markIdx < marks.length && marks[markIdx].at <= i) {
+        if (glowing) glow(glowing, false);
+        glowing = marks[markIdx].piece;
+        glow(glowing, true);
+        markIdx++;
+      }
+      if (token !== crossToken) { if (glowing) glow(glowing, false); return; }
+      await animateTurns([log[i]]);
+    }
+    if (glowing) glow(glowing, false);
+    if (token === crossToken) {
+      timelineMark('1st layer');
+      setCrossStatus('White cross and first layer solved.');
+    }
+  }
+
+  // ---------- Second layer ----------
+  // Edges in the yellow layer that belong in the middle layer. Each one is lined up (yellow face turns, and a
+  // whole-cube turn if needed), then inserted with an insertion sequence. Each sequence is tried in both forms,
+  // and the one that puts the edge in its slot without breaking the first layer or the edges already placed is used.
+  const MIDDLE_SLOTS = [[1, 1, COLORS.right, COLORS.front], [-1, 1, COLORS.left, COLORS.front],
+                        [-1, -1, COLORS.left, COLORS.back], [1, -1, COLORS.right, COLORS.back]];
+  const middleSlotOk = ([sx, sz, cx, cz]) => {
+    const p = findPiece(new THREE.Vector3(sx, 0, sz));
+    return tileColor(p, [sx, 0, 0]) === cx && tileColor(p, [0, 0, sz]) === cz;
+  };
+  const SECOND_CANDIDATES = ["D L D' L' D' F' D F", "D' R' D R D F D' F'"];
+  async function runSecondLayer(token) {
+    const log = [];
+    const marks = [];
+    moveLog = log;
+    const applyAlgSim = alg => algMoves(alg).forEach(m => turnLayer(m.ai, m.layers, m.angle));
+    const snap = () => allPieces.map(p => [p.position.clone(), p.quaternion.clone()]);
+    const restore = st => allPieces.forEach((p, i) => { p.position.copy(st[i][0]); p.quaternion.copy(st[i][1]); });
+    const placed = [];   // middle slots already filled
+    const findEdge = () => allPieces.find(p => {
+      if (p.position.y !== -1 || Math.abs(p.position.x) + Math.abs(p.position.z) !== 1) return false;
+      return !Object.values(p.userData.stickers).some(st => st.material.color.getHex() === COLORS.down);
+    });
+    // An edge that is in the middle layer but in the wrong slot
+    const findMisplacedMiddle = () => allPieces.find(p => {
+      if (p.position.y !== 0 || Math.abs(p.position.x) !== 1 || Math.abs(p.position.z) !== 1) return false;
+      const slot = MIDDLE_SLOTS.find(sl => sl[0] === p.position.x && sl[1] === p.position.z);
+      return slot && !middleSlotOk(slot);
+    });
+    let ok = true;
+    for (let step = 0; step < 8 && ok; step++) {
+      if (token !== crossToken) return;
+      if (MIDDLE_SLOTS.every(sl => middleSlotOk(sl))) break;
+      let edge = findEdge();
+      if (!edge) {
+        // No edge in the yellow layer: pull a misplaced middle edge down into it first
+        const mis = findMisplacedMiddle();
+        if (!mis) break;
+        const before0 = snap();
+        setCrossStatus(`Second layer ${step + 1}: pulling an edge down out of the middle layer...`);
+        moveLog = null;
+        let got = null;
+        search0: for (let r = 0; r < 4; r++) for (let a = 0; a < 4; a++) for (const alg of SECOND_CANDIDATES) {
+          restore(before0);
+          for (let t = 0; t < r; t++) turnLayer(1, [-1, 0, 1], -Math.PI / 2);
+          for (let t = 0; t < a; t++) turnLayer(1, [-1], Math.PI / 2);
+          applyAlgSim(alg);
+          for (let t = 0; t < r; t++) turnLayer(1, [-1, 0, 1], Math.PI / 2);
+          if (findEdge() && placed.every(sl => middleSlotOk(sl)) && FIRST_SLOTS.every(([x, z, a2, b2]) => slotOk(x, z, a2, b2))) {
+            got = { r, a, alg };
+            break search0;
+          }
+        }
+        restore(before0);
+        moveLog = log;
+        if (!got) {
+          ok = false;
+          setCrossStatus('Could not pull a middle edge down into the yellow layer.');
+          break;
+        }
+        marks.push({ at: log.length, piece: mis });
+        for (let t = 0; t < got.r; t++) turnLayer(1, [-1, 0, 1], -Math.PI / 2);
+        for (let t = 0; t < got.a; t++) turnLayer(1, [-1], Math.PI / 2);
+        applyAlgSim(got.alg);
+        for (let t = 0; t < got.r; t++) turnLayer(1, [-1, 0, 1], Math.PI / 2);
+        continue;
+      }
+      const cols = Object.values(edge.userData.stickers).map(st => st.material.color.getHex());
+      const slot = MIDDLE_SLOTS.find(([sx, sz, cx, cz]) => !middleSlotOk([sx, sz, cx, cz]) && cols.includes(cx) && cols.includes(cz));
+      if (!slot) {
+        ok = false;
+        setCrossStatus('An edge in the yellow layer has no empty slot it belongs in.');
+        break;
+      }
+      const before = snap();
+      setCrossStatus(`Second layer ${step + 1}: lining up the edge...`);
+      // Find the whole-cube turn (r), yellow face turns (a) and insertion form that put the edge in its slot
+      moveLog = null;
+      let found = null;
+      search: for (let r = 0; r < 4; r++) for (let a = 0; a < 4; a++) for (const alg of SECOND_CANDIDATES) {
+        restore(before);
+        for (let t = 0; t < r; t++) turnLayer(1, [-1, 0, 1], -Math.PI / 2);
+        for (let t = 0; t < a; t++) turnLayer(1, [-1], Math.PI / 2);
+        applyAlgSim(alg);
+        for (let t = 0; t < r; t++) turnLayer(1, [-1, 0, 1], Math.PI / 2);
+        if (middleSlotOk(slot) && placed.every(sl => middleSlotOk(sl)) && FIRST_SLOTS.every(([x, z, a2, b2]) => slotOk(x, z, a2, b2))) {
+          found = { r, a, alg };
+          break search;
+        }
+      }
+      restore(before);
+      moveLog = log;
+      if (!found) {
+        ok = false;
+        setCrossStatus(`Second layer ${step + 1}: no insertion found for this edge.`);
+        break;
+      }
+      marks.push({ at: log.length, piece: edge });
+      for (let t = 0; t < found.r; t++) turnLayer(1, [-1, 0, 1], -Math.PI / 2);
+      for (let t = 0; t < found.a; t++) turnLayer(1, [-1], Math.PI / 2);
+      applyAlgSim(found.alg);
+      for (let t = 0; t < found.r; t++) turnLayer(1, [-1, 0, 1], Math.PI / 2);
+      placed.push(slot);
+      setCrossStatus(`Second layer: edge ${step + 1} inserted.`);
+    }
+    moveLog = null;
+    if (token !== crossToken) return;
+    const done = ok && MIDDLE_SLOTS.every(sl => middleSlotOk(sl)) && firstLayerSolved();
+    for (let i = log.length - 1; i >= 0; i--) turnLayer(log[i].ai, log[i].layers, -log[i].angle);
+    if (!done) {
+      setCrossStatus(ok ? 'The second layer is not solved yet.' : 'The second layer could not be finished.');
+      return;
+    }
+    setCrossStatus(`First and second layers: ${log.length} turns, playing them now.`);
+    const glow = (piece, on) => Object.values(piece.userData.stickers).forEach(st =>
+      st.material.emissive.setHex(on ? 0x555555 : 0x000000));
+    let markIdx = 0, glowing = null;
+    for (let i = 0; i < log.length; i++) {
+      while (markIdx < marks.length && marks[markIdx].at <= i) {
+        if (glowing) glow(glowing, false);
+        glowing = marks[markIdx].piece;
+        glow(glowing, true);
+        markIdx++;
+      }
+      if (token !== crossToken) { if (glowing) glow(glowing, false); return; }
+      await animateTurns([log[i]]);
+    }
+    if (glowing) glow(glowing, false);
+    if (token === crossToken) {
+      timelineMark('2nd layer');
+      setCrossStatus('White cross, first layer and second layer solved.');
+    }
+  }
+
+  // ---------- Timeline (the bar under the solver) ----------
+  let timelineMoves = [], timelineMarks = [], timelineStart = null, timelineRecording = false, timelinePos = 0;
+  const snapState = () => allPieces.map(p => [p.position.clone(), p.quaternion.clone()]);
+  const restoreState = st => allPieces.forEach((p, i) => { p.position.copy(st[i][0]); p.quaternion.copy(st[i][1]); });
+  function recordTimeline(parts) {
+    parts.forEach(p => timelineMoves.push({ ai: p.ai, layers: p.layers, angle: p.angle }));
+    timelinePos = timelineMoves.length;
+    renderTimeline();
+  }
+  function timelineMark(label) {
+    timelineMarks.push({ at: timelineMoves.length, label });
+    renderTimeline();
+  }
+  function lastMarkBefore(pos) {
+    let name = '';
+    timelineMarks.forEach(mk => { if (mk.at <= pos) name = mk.label; });
+    return name;
+  }
+  function renderTimeline() {
+    const slider = $('timeline');
+    slider.max = timelineMoves.length;
+    slider.value = timelinePos;
+    const marksEl = $('timeline-marks');
+    marksEl.innerHTML = '';
+    const total = Math.max(1, timelineMoves.length);
+    timelineMarks.forEach(mk => {
+      const b = document.createElement('button');
+      b.textContent = mk.label;
+      b.style.left = `${(mk.at / total) * 100}%`;
+      b.onclick = () => jumpTimeline(mk.at);
+      marksEl.appendChild(b);
+    });
+    const stage = lastMarkBefore(timelinePos);
+    $('timeline-now').textContent = `${timelinePos} / ${timelineMoves.length} moves` + (stage ? ` · ${stage} solved` : '');
+  }
+  // Show the cube as it is after k moves of the solve (stops any solve that is still playing)
+  function jumpTimeline(k) {
+    timelineRecording = false;
+    crossToken++;
+    if (activeTurn) activeTurn.cancel();
+    crossBusy = false;
+    k = Math.max(0, Math.min(k, timelineMoves.length));
+    if (timelineStart) restoreState(timelineStart);
+    moveLog = null;
+    for (let i = 0; i < k; i++) {
+      const m = timelineMoves[i];
+      turnLayer(m.ai, m.layers, m.angle);
+    }
+    timelinePos = k;
+    renderTimeline();
+  }
+  $('timeline').addEventListener('input', e => jumpTimeline(parseInt(e.target.value, 10)));
+
+  // The PLL step: convert the algorithm to the yellow-top frame (like OLL), undo its whole-cube turns,
+  // then find the cheapest yellow-layer turns before and after that make the whole cube solved
+  function convertPllAlgorithm(alg) {
+    const swap = { U: 'D', D: 'U', u: 'd', d: 'u', F: 'B', B: 'F', f: 'b', b: 'f' };
+    return alg.split(/\s+/).filter(Boolean).map(token => {
+      const c = token[0], rest = token.slice(1);
+      if (c === 'y' || c === 'z') {
+        if (rest === '2') return token;
+        return rest === "'" ? c : c + "'";
+      }
+      return (swap[c] || c) + rest;
+    }).join(' ');
+  }
+  function cubeSolvedNow() {
+    return allPieces.every(p => DIRS.every((d, idx) => {
+      if (p.position.x * d[0] + p.position.y * d[1] + p.position.z * d[2] !== 1) return true;
+      return tileColor(p, d) === COLOR_BY_IDX[idx];
+    }));
+  }
+  function findPllSolution() {
+    const st = snapState();
+    const yellowTurn = () => turnLayer(1, [-1], Math.PI / 2);
+    let best = null;
+    moveLog = null;
+    Object.keys(PLL_ALGS).forEach(key => {
+      const moves = algMoves(convertPllAlgorithm(PLL_ALGS[key]));
+      const wholeUndo = moves.filter(m => m.layers.length === 3).reverse().map(m => ({ ai: m.ai, layers: m.layers, angle: -m.angle }));
+      const seqMoves = [...moves, ...wholeUndo];
+      for (let pre = 0; pre < 4; pre++) {
+        restoreState(st);
+        for (let t = 0; t < pre; t++) yellowTurn();
+        seqMoves.forEach(m => turnLayer(m.ai, m.layers, m.angle));
+        for (let post = 0; post < 4; post++) {
+          if (cubeSolvedNow()) {
+            const cost = pre + post + seqMoves.length;
+            if (!best || cost < best.cost) best = { key, pre, post, seqMoves, cost };
+            break;
+          }
+          yellowTurn();
+        }
+      }
+    });
+    restoreState(st);
+    if (!best) return null;
+    const seq = [];
+    for (let t = 0; t < best.pre; t++) seq.push({ ai: 1, layers: [-1], angle: Math.PI / 2 });
+    best.seqMoves.forEach(m => seq.push(m));
+    for (let t = 0; t < best.post; t++) seq.push({ ai: 1, layers: [-1], angle: Math.PI / 2 });
+    return { seq, name: `PLL ${PLL_LABEL[best.key]} perm: ${PLL_ALGS[best.key]}` };
+  }
+  async function runPll(token) {
+    const found = findPllSolution();
+    if (token !== crossToken) return;
+    if (!found) {
+      setCrossStatus('No PLL algorithm matches this case.');
+      return;
+    }
+    setCrossStatus(found.name);
+    for (const m of found.seq) {
+      if (token !== crossToken) return;
+      await animateTurns([m]);
+    }
+    if (token === crossToken) {
+      const solved = cubeSolvedNow();
+      if (solved) timelineMark('PLL');
+      setCrossStatus(solved ? 'The cube is solved.' : 'PLL is not solved yet.');
+    }
+  }
+
+  // After the first two layers: find the OLL algorithm that matches the case on screen, then play it
+  async function runOll(token) {
+    const found = findOllSolution();
+    if (token !== crossToken) return;
+    if (!found) {
+      setCrossStatus('No OLL algorithm matches this case.');
+      return;
+    }
+    setCrossStatus(`OLL: ${found.name}`);
+    for (const m of found.seq) {
+      if (token !== crossToken) return;
+      await animateTurns([m]);
+    }
+    if (token === crossToken) {
+      if (ollSolvedNow()) timelineMark('OLL');
+      setCrossStatus(ollSolvedNow() ? 'White cross, first layer, second layer and OLL solved.' : 'OLL is not solved yet.');
+    }
+  }
+
   $('cross-solve').onclick = async () => {
     if (crossBusy) return;
     if (crossCount() === 4) { setCrossStatus('The white cross is already solved.'); return; }
     crossBusy = true;
     const token = ++crossToken;
+    timelineStart = snapState();
+    timelineMoves = [];
+    timelineMarks = [];
+    timelinePos = 0;
+    timelineRecording = true;
+    renderTimeline();
+    noMiddleLayer = false;
+    noUpperLayer = false;
+    animateSearch = false;
     setCrossStatus('Searching for a solution...');
     $('cross-pause').disabled = false;
     moveLog = null;
@@ -1311,8 +1826,20 @@
     setCrossStatus(solutionStatus(path));
     lastCrossPath = path;
     await playCrossPath(path, token);
+    if (token === crossToken) timelineMark('Cross');
+    if (token === crossToken) {
+      // Play again only replays the cross, so it stays off once the first layer is added
+      lastCrossPath = null;
+      await runFirstLayer(token);
+      if (token === crossToken && firstLayerSolved()) await runSecondLayer(token);
+      if (token === crossToken && firstLayerSolved() && MIDDLE_SLOTS.every(sl => middleSlotOk(sl))) await runOll(token);
+      if (token === crossToken && ollSolvedNow()) await runPll(token);
+      noMiddleLayer = false;
+      noUpperLayer = false;
+      animateSearch = false;
+    }
+    timelineRecording = false;
     crossBusy = false;
-    if (token === crossToken) $('cross-again').disabled = false;
   };
 
   // Play again: step back from the solved cube to the scramble, then play the solution again
@@ -1718,6 +2245,7 @@
           cube.remove(it.pivot);
         });
         activeTurn = null;
+        if (timelineRecording && !animateSearch) recordTimeline(parts);
         resolve();
       }
       activeTurn = { cancel: finish };
@@ -1761,6 +2289,134 @@
     if (token === solveToken) { solving = false; caseSolved = true; }
   }
   $('pllcase-solve').onclick = () => solvePllCase();
+
+  // ---------- OLL answer key and 3D animations ----------
+  // The cube model has white on top, while OLL notation assumes yellow on top.
+  // Conjugating by a 180-degree X rotation swaps U/D and F/B while preserving R/L.
+  const ollRows = [...$('oll').querySelectorAll('li')];
+  const ollCases = ollRows.map((li, index) => ({
+    number: index + 1,
+    shape: li.querySelector('.shape').textContent,
+    alg: li.querySelector('.alg').textContent.replace(/’/g, "'")
+  }));
+  let ollCaseNumber = 1;
+  let ollSolutionMoves = [];
+  let ollCaseSolved = false;
+  function convertOllAlgorithm(alg) {
+    const swap = { U: 'D', D: 'U', u: 'd', d: 'u', F: 'B', B: 'F', f: 'b', b: 'f' };
+    return alg.split(/\s+/).filter(Boolean).map(token =>
+      (swap[token[0]] || token[0]) + token.slice(1)
+    ).join(' ');
+  }
+  function buildOllCase(number) {
+    const item = ollCases[number - 1];
+    if (!item) return;
+    resetCube();
+    const moves = algMoves(convertOllAlgorithm(item.alg));
+    moves.slice().reverse().forEach(m => turnLayer(m.ai, m.layers, -m.angle));
+    ollSolutionMoves = moves;
+    ollCaseSolved = false;
+    $('ollcase-solve').textContent = 'Show animation';
+  }
+  function showOllCase(number) {
+    if (activeTurn) activeTurn.cancel();
+    solveToken++;
+    solving = false;
+    ollCaseNumber = Math.max(1, Math.min(57, number));
+    const item = ollCases[ollCaseNumber - 1];
+    $('ollcase-title').textContent = `OLL ${item.number} — ${item.shape}`;
+    $('ollcase-alg').textContent = item.alg;
+    buildOllCase(ollCaseNumber);
+    // OLL is shown with yellow on top: flip the cube over (turn 180 degrees around the front-back axis),
+    // then use the same tilt and turn as the PLL viewer
+    setFreeView(PLL_TILT, 0.3491, Math.PI);
+    velX = 0;
+    velY = 0;
+  }
+  // Is the yellow layer all yellow (every bottom tile facing down is yellow)?
+  function ollSolvedNow() {
+    return allPieces.every(p => p.position.y !== -1 || tileColor(p, [0, -1, 0]) === COLORS.down);
+  }
+
+  // Try every OLL algorithm, with U (yellow face) turns before and after, on the case on screen.
+  // Returns the cheapest sequence that solves the yellow layer.
+  function findOllSolution() {
+    const snapA = allPieces.map(p => [p.position.clone(), p.quaternion.clone()]);
+    const restoreA = () => allPieces.forEach((p, i) => { p.position.copy(snapA[i][0]); p.quaternion.copy(snapA[i][1]); });
+    const yellowTurn = () => turnLayer(1, [-1], Math.PI / 2);
+    let best = null;
+    moveLog = null;
+    ollCases.forEach((item, i) => {
+      const moves = algMoves(convertOllAlgorithm(item.alg));
+      for (let pre = 0; pre < 4; pre++) {
+        restoreA();
+        for (let t = 0; t < pre; t++) yellowTurn();
+        moves.forEach(m => turnLayer(m.ai, m.layers, m.angle));
+        for (let post = 0; post < 4; post++) {
+          if (ollSolvedNow()) {
+            const cost = pre + post + moves.length;
+            if (!best || cost < best.cost) best = { i, pre, post, moves, cost };
+            break;
+          }
+          yellowTurn();
+        }
+      }
+    });
+    restoreA();
+    if (!best) return null;
+    const seq = [];
+    for (let t = 0; t < best.pre; t++) seq.push({ ai: 1, layers: [-1], angle: Math.PI / 2 });
+    best.moves.forEach(m => seq.push(m));
+    for (let t = 0; t < best.post; t++) seq.push({ ai: 1, layers: [-1], angle: Math.PI / 2 });
+    return { seq, name: `Matched OLL ${ollCases[best.i].number} (${ollCases[best.i].shape}): ${ollCases[best.i].alg}` };
+  }
+
+  async function solveOllCase() {
+    if (solving) return;
+    if (ollCaseSolved) {
+      buildOllCase(ollCaseNumber);
+      return;
+    }
+    const found = findOllSolution();
+    if (!found) {
+      $('ollcase-alg').textContent = 'No OLL algorithm matches this case.';
+      return;
+    }
+    ollSolutionMoves = found.seq;
+    $('ollcase-alg').textContent = found.name;
+    solving = true;
+    const token = solveToken;
+    const moves = ollSolutionMoves.slice();
+    for (let i = 0; i < moves.length; i++) {
+      if (token !== solveToken) break;
+      await animateTurns([moves[i]]);
+    }
+    if (token === solveToken) {
+      solving = false;
+      ollCaseSolved = true;
+      $('ollcase-solve').textContent = 'Reset case';
+    }
+  }
+  ollRows.forEach((li, index) => {
+    li.tabIndex = 0;
+    li.setAttribute('role', 'link');
+    li.setAttribute('aria-label', `Open OLL case ${index + 1}`);
+    li.addEventListener('click', () => { location.hash = `#ollcase=${index + 1}`; });
+    li.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        location.hash = `#ollcase=${index + 1}`;
+      }
+    });
+  });
+  $('ollcase-prev').onclick = () => { location.hash = `#ollcase=${ollCaseNumber === 1 ? 57 : ollCaseNumber - 1}`; };
+  $('ollcase-next').onclick = () => { location.hash = `#ollcase=${ollCaseNumber === 57 ? 1 : ollCaseNumber + 1}`; };
+  $('ollcase-solve').onclick = solveOllCase;
+  $('oll-speed-slider').addEventListener('input', e => {
+    const value = parseFloat(e.target.value);
+    setAnimSpeed(value);
+    $('oll-speed-label').textContent = `${parseFloat(value.toFixed(2))}x`;
+  });
 
   // Pencil menu: pick one of the alternate algorithms for this case
   function closeAltMenu() {
@@ -1834,12 +2490,13 @@
     const onTrainer = location.hash === '#trainer';
     const onPll = location.hash === '#pll';
     const onPllCase = location.hash.startsWith('#pllcase=');
+    const onOllCase = location.hash.startsWith('#ollcase=');
     const onPllKey = location.hash === '#pllkey';
     const onLearn = location.hash === '#learn';
     const onLearnCross = location.hash === '#learncross';
     const onLearnCrossMenu = location.hash === '#learncrossmenu';
     const onCrossSolver = location.hash === '#crosssolver';
-    const onCube = onTrainer || onPll || onPllCase || onLearnCross || onCrossSolver;
+    const onCube = onTrainer || onPll || onPllCase || onOllCase || onLearnCross || onCrossSolver;
     const wasTrainer = document.body.classList.contains('trainer');
     pllView = onPll || onPllCase;
     document.body.classList.toggle('trainer', onTrainer);
@@ -1852,11 +2509,12 @@
     $('learncross').hidden = !onLearnCross;
     $('pllkey').hidden = !onPllKey;
     $('pllcase').hidden = !onPllCase;
+    $('ollcase').hidden = !onOllCase;
     $('oll').hidden = !onOll;
     $('trainer').hidden = !onTrainer;
     $('pll').hidden = !onPll;
     canvas.style.display = onCube ? 'block' : 'none';
-    setBody(onPll || onPllCase || onLearnCross || onCrossSolver);
+    setBody(onPll || onPllCase || onOllCase || onLearnCross || onCrossSolver);
     document.body.style.overflow = onCube ? 'hidden' : '';
     window.scrollTo(0, 0);
 
@@ -1872,6 +2530,7 @@
     setCrossPaused(false);
     $('cross-pause').disabled = true;
     if (crossBusy) { crossUndoAll(); crossBusy = false; }
+    timelineRecording = false;
     crossToken++;
     clearHighlight();
     clearHover();
@@ -1880,6 +2539,8 @@
 
     if (onPllCase) {
       showPllCase(location.hash.slice('#pllcase='.length));
+    } else if (onOllCase) {
+      showOllCase(parseInt(location.hash.slice('#ollcase='.length), 10));
     } else if (onTrainer) {
       resetCube();
       startRun();
